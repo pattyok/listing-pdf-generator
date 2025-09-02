@@ -1,0 +1,7 @@
+{
+    "name": "listing-pdf-generator/listing-pdf-generator",
+    "description": "PDF Generator for ELF.",
+    "require": {
+        "tecnickcom/tcpdf": "^6.2.13"
+    }
+}
