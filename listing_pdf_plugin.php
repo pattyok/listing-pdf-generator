@@ -509,7 +509,7 @@ class CompleteListingPDFPlugin {
         add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
         add_action('wp_ajax_generate_listing_pdf', array($this, 'handle_pdf_generation'));
         add_action('wp_ajax_nopriv_generate_listing_pdf', array($this, 'handle_pdf_generation'));
-        add_action('wp_footer', array($this, 'add_pdf_button_to_listings'));
+        add_filter('the_content', array($this, 'add_pdf_button_to_content'));
     }
     
     /**
@@ -570,53 +570,36 @@ class CompleteListingPDFPlugin {
     }
     
     /**
-     * Add PDF button to listing pages - SIMPLIFIED WITH DEBUG
+     * Add PDF button to content after "Edit Listing" button
      */
-    public function add_pdf_button_to_listings() {
-        // Debug mode - add HTML comments to help troubleshoot
-        $debug_info = array();
-        $debug_info[] = 'is_singular: ' . (is_singular() ? 'true' : 'false');
-        $debug_info[] = 'is_listing_post_type: ' . ($this->is_listing_post_type() ? 'true' : 'false');
-        $debug_info[] = 'is_user_logged_in: ' . (is_user_logged_in() ? 'true' : 'false');
-        $debug_info[] = 'user_can_generate_pdf: ' . ($this->user_can_generate_pdf() ? 'true' : 'false');
-        
-        $post = get_post();
-        if ($post) {
-            $debug_info[] = 'post_type: ' . $post->post_type;
-            $debug_info[] = 'post_id: ' . $post->ID;
-            $debug_info[] = 'post_status: ' . $post->post_status;
-            if (is_user_logged_in()) {
-                $debug_info[] = 'current_user_id: ' . get_current_user_id();
-                $debug_info[] = 'user_can_manage_options: ' . (current_user_can('manage_options') ? 'true' : 'false');
-                $debug_info[] = 'user_can_edit_posts: ' . (current_user_can('edit_posts') ? 'true' : 'false');
-            }
+    public function add_pdf_button_to_content($content) {
+        // Only process on single posts/pages in main query
+        if (!is_singular() || !is_main_query() || !in_the_loop()) {
+            return $content;
         }
         
-        echo '<!-- PDF Plugin Debug: ' . implode(', ', $debug_info) . ' -->' . "\n";
-        
-        if (!is_singular() || !$this->is_listing_post_type()) {
-            echo '<!-- PDF Plugin: Not showing button - failed is_singular or is_listing_post_type check -->' . "\n";
-            return;
+        // Check if this is a listing post type
+        if (!$this->is_listing_post_type()) {
+            return $content;
         }
         
-        // Check if user is logged in and has permissions
+        // Check if user has permissions
         if (!$this->user_can_generate_pdf()) {
-            echo '<!-- PDF Plugin: Not showing button - user cannot generate PDF -->' . "\n";
-            return;
+            return $content;
         }
         
         $post_id = get_the_ID();
         $button_html = sprintf(
-            '<div id="pdf-generator-button" style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
-                <button type="button" id="generate-pdf-btn" class="pdf-generator-btn" data-post-id="%d">
-                    📄 Generate PDF
+            '<div class="pdf-generator-wrapper" style="margin: 20px 0; text-align: left;">
+                <button type="button" id="generate-pdf-btn" class="pdf-generator-btn button" data-post-id="%d">
+                    📄 Download PDF
                 </button>
             </div>',
             $post_id
         );
         
-        echo '<!-- PDF Plugin: Showing PDF button -->' . "\n";
-        echo $button_html;
+        // Add button at the end of content
+        return $content . $button_html;
     }
     
     /**
@@ -675,30 +658,47 @@ class CompleteListingPDFPlugin {
         // Add button styles
         var style = document.createElement('style');
         style.textContent = `
+            .pdf-generator-wrapper {
+                margin: 20px 0 !important;
+                padding: 15px;
+                background-color: #f9f9f9;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+            }
+            
             .pdf-generator-btn {
                 background: linear-gradient(135deg, #004D43 0%, #6AA338 100%);
-                color: white;
+                color: white !important;
                 border: none;
-                padding: 12px 20px;
-                border-radius: 25px;
+                padding: 10px 16px;
+                border-radius: 4px;
                 font-size: 14px;
-                font-weight: bold;
+                font-weight: 600;
                 cursor: pointer;
-                box-shadow: 0 4px 15px rgba(0, 77, 67, 0.3);
                 transition: all 0.3s ease;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
+                text-decoration: none !important;
+                display: inline-block;
+                line-height: 1.4;
             }
             
             .pdf-generator-btn:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 6px 20px rgba(0, 77, 67, 0.4);
+                background: linear-gradient(135deg, #6AA338 0%, #004D43 100%);
+                color: white !important;
+                transform: translateY(-1px);
+                box-shadow: 0 2px 8px rgba(0, 77, 67, 0.3);
+                text-decoration: none !important;
             }
             
             .pdf-generator-btn:disabled {
-                opacity: 0.7;
+                opacity: 0.6;
                 cursor: not-allowed;
                 transform: none;
+                background: #999 !important;
+            }
+            
+            .pdf-generator-btn:focus {
+                outline: 2px solid #6AA338;
+                outline-offset: 2px;
             }
         `;
         document.head.appendChild(style);
