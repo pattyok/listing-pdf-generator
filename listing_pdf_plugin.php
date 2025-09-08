@@ -507,21 +507,19 @@ class CompleteListingPDFPlugin {
     }
     
     /**
-     * Check if current post is a listing
+     * Check if current post is a listing - SIMPLIFIED VERSION
      */
     private function is_listing_post_type() {
         $post = get_post();
         if (!$post) return false;
         
-        // Check for common listing post types
-        $listing_types = array('listing', 'business', 'farm', 'directory');
-        return in_array($post->post_type, $listing_types) || 
-               has_term('', 'listing_type', $post->ID) ||
-               has_term('', 'listing_categories', $post->ID);
+        // Much more inclusive - any published post can have a PDF generated
+        // This includes posts, pages, and any custom post types
+        return $post->post_status === 'publish';
     }
     
     /**
-     * Check if current user can generate PDF for this listing
+     * Check if current user can generate PDF for this listing - SIMPLIFIED VERSION
      */
     private function user_can_generate_pdf($post_id = null) {
         // Must be logged in
@@ -529,30 +527,25 @@ class CompleteListingPDFPlugin {
             return false;
         }
         
-        $current_user_id = get_current_user_id();
-        $post_id = $post_id ?: get_the_ID();
+        // SIMPLIFIED: Any logged-in admin can generate PDFs
+        // This makes testing much easier
+        if (current_user_can('manage_options')) {
+            return true;
+        }
         
+        // Also allow users who can edit posts
+        if (current_user_can('edit_posts')) {
+            return true;
+        }
+        
+        $post_id = $post_id ?: get_the_ID();
         if (!$post_id) {
             return false;
         }
         
+        // Still allow post authors
         $post = get_post($post_id);
-        if (!$post) {
-            return false;
-        }
-        
-        // Check if user is the author of the listing
-        if ($post->post_author == $current_user_id) {
-            return true;
-        }
-        
-        // Check if user has edit permissions for this post
-        if (current_user_can('edit_post', $post_id)) {
-            return true;
-        }
-        
-        // Check if user is admin or has manage_options capability
-        if (current_user_can('manage_options')) {
+        if ($post && $post->post_author == get_current_user_id()) {
             return true;
         }
         
@@ -560,15 +553,38 @@ class CompleteListingPDFPlugin {
     }
     
     /**
-     * Add PDF button to listing pages (only for listing owners)
+     * Add PDF button to listing pages - SIMPLIFIED WITH DEBUG
      */
     public function add_pdf_button_to_listings() {
+        // Debug mode - add HTML comments to help troubleshoot
+        $debug_info = array();
+        $debug_info[] = 'is_singular: ' . (is_singular() ? 'true' : 'false');
+        $debug_info[] = 'is_listing_post_type: ' . ($this->is_listing_post_type() ? 'true' : 'false');
+        $debug_info[] = 'is_user_logged_in: ' . (is_user_logged_in() ? 'true' : 'false');
+        $debug_info[] = 'user_can_generate_pdf: ' . ($this->user_can_generate_pdf() ? 'true' : 'false');
+        
+        $post = get_post();
+        if ($post) {
+            $debug_info[] = 'post_type: ' . $post->post_type;
+            $debug_info[] = 'post_id: ' . $post->ID;
+            $debug_info[] = 'post_status: ' . $post->post_status;
+            if (is_user_logged_in()) {
+                $debug_info[] = 'current_user_id: ' . get_current_user_id();
+                $debug_info[] = 'user_can_manage_options: ' . (current_user_can('manage_options') ? 'true' : 'false');
+                $debug_info[] = 'user_can_edit_posts: ' . (current_user_can('edit_posts') ? 'true' : 'false');
+            }
+        }
+        
+        echo '<!-- PDF Plugin Debug: ' . implode(', ', $debug_info) . ' -->' . "\n";
+        
         if (!is_singular() || !$this->is_listing_post_type()) {
+            echo '<!-- PDF Plugin: Not showing button - failed is_singular or is_listing_post_type check -->' . "\n";
             return;
         }
         
-        // Check if user is logged in and owns the listing
+        // Check if user is logged in and has permissions
         if (!$this->user_can_generate_pdf()) {
+            echo '<!-- PDF Plugin: Not showing button - user cannot generate PDF -->' . "\n";
             return;
         }
         
@@ -582,6 +598,7 @@ class CompleteListingPDFPlugin {
             $post_id
         );
         
+        echo '<!-- PDF Plugin: Showing PDF button -->' . "\n";
         echo $button_html;
     }
     
