@@ -509,7 +509,11 @@ class CompleteListingPDFPlugin {
         add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
         add_action('wp_ajax_generate_listing_pdf', array($this, 'handle_pdf_generation'));
         add_action('wp_ajax_nopriv_generate_listing_pdf', array($this, 'handle_pdf_generation'));
-        add_filter('the_content', array($this, 'add_pdf_button_to_content'));
+        
+        // Try multiple hooks to place button after content but outside content area
+        add_action('wp_footer', array($this, 'add_pdf_button_via_javascript'));
+        add_action('genesis_entry_footer', array($this, 'add_pdf_button_to_entry_footer'));
+        add_action('thesis_hook_after_post', array($this, 'add_pdf_button_to_entry_footer'));
     }
     
     /**
@@ -570,36 +574,99 @@ class CompleteListingPDFPlugin {
     }
     
     /**
-     * Add PDF button to content after "Edit Listing" button
+     * Add PDF button via JavaScript positioning (better control)
      */
-    public function add_pdf_button_to_content($content) {
-        // Only process on single posts/pages in main query
-        if (!is_singular() || !is_main_query() || !in_the_loop()) {
-            return $content;
+    public function add_pdf_button_via_javascript() {
+        if (!is_singular() || !$this->is_listing_post_type()) {
+            return;
         }
         
-        // Check if this is a listing post type
-        if (!$this->is_listing_post_type()) {
-            return $content;
-        }
-        
-        // Check if user has permissions
         if (!$this->user_can_generate_pdf()) {
-            return $content;
+            return;
         }
         
         $post_id = get_the_ID();
-        $button_html = sprintf(
-            '<div class="pdf-generator-wrapper" style="margin: 20px 0; text-align: left;">
+        ?>
+        <script type="text/javascript">
+        jQuery(document).ready(function($) {
+            // Create the PDF button HTML
+            var pdfButton = $('<div class="pdf-generator-wrapper" style="margin: 15px 0; padding: 15px; background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 5px;"><button type="button" id="generate-pdf-btn" class="pdf-generator-btn button" data-post-id="<?php echo esc_js($post_id); ?>">📄 Download PDF</button></div>');
+            
+            // Try different selectors to find where to place the button
+            var inserted = false;
+            
+            // Look for common "Edit Listing" button locations
+            var editSelectors = [
+                '.entry-meta .edit-link',
+                '.post-edit-link', 
+                '.edit-post-link',
+                '.entry-footer .edit-link',
+                '.listing-actions',
+                '.post-actions',
+                '[class*="edit"]'
+            ];
+            
+            // Try to place after edit button
+            for (var i = 0; i < editSelectors.length; i++) {
+                var editElement = $(editSelectors[i]);
+                if (editElement.length > 0) {
+                    editElement.last().after(pdfButton);
+                    inserted = true;
+                    break;
+                }
+            }
+            
+            // Fallback: place after main content
+            if (!inserted) {
+                var contentSelectors = [
+                    '.entry-content',
+                    '.post-content', 
+                    '.listing-content',
+                    'article .content',
+                    'main article',
+                    '.single-post article'
+                ];
+                
+                for (var i = 0; i < contentSelectors.length; i++) {
+                    var contentElement = $(contentSelectors[i]);
+                    if (contentElement.length > 0) {
+                        contentElement.last().after(pdfButton);
+                        inserted = true;
+                        break;
+                    }
+                }
+            }
+            
+            // Final fallback: place before footer
+            if (!inserted) {
+                $('footer').first().before(pdfButton);
+            }
+        });
+        </script>
+        <?php
+    }
+    
+    /**
+     * Add PDF button to entry footer (theme-specific hook)
+     */
+    public function add_pdf_button_to_entry_footer() {
+        if (!is_singular() || !$this->is_listing_post_type()) {
+            return;
+        }
+        
+        if (!$this->user_can_generate_pdf()) {
+            return;
+        }
+        
+        $post_id = get_the_ID();
+        printf(
+            '<div class="pdf-generator-wrapper" style="margin: 15px 0; padding: 15px; background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 5px;">
                 <button type="button" id="generate-pdf-btn" class="pdf-generator-btn button" data-post-id="%d">
                     📄 Download PDF
                 </button>
             </div>',
             $post_id
         );
-        
-        // Add button at the end of content
-        return $content . $button_html;
     }
     
     /**
