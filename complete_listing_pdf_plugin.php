@@ -1,5 +1,25 @@
 <?php
 /**
+ * Plugin Name: Complete Listing PDF Generator
+ * Plugin URI: https://eatlocalfirst.org
+ * Description: Generates PDFs for business listings with QR codes and contact information
+ * Version: 1.0.0
+ * Author: Eat Local First
+ * License: GPL v2 or later
+ * Text Domain: complete-listing-pdf
+ */
+
+// Prevent direct access
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+// Define plugin constants
+define('COMPLETE_LISTING_PDF_VERSION', '1.0.0');
+define('COMPLETE_LISTING_PDF_PLUGIN_URL', plugin_dir_url(__FILE__));
+define('COMPLETE_LISTING_PDF_PLUGIN_PATH', plugin_dir_path(__FILE__));
+
+/**
  * Simple Universal PDF Generator V1
  * One template, predetermined fields, no complexity
  */
@@ -452,5 +472,249 @@ class SimpleListingPDFGenerator {
         return $badges;
     }
 }
+
+/**
+ * Main plugin class
+ */
+class CompleteListingPDFPlugin {
+    
+    private $pdf_generator;
+    
+    public function __construct() {
+        $this->pdf_generator = new SimpleListingPDFGenerator();
+        $this->init_hooks();
+    }
+    
+    /**
+     * Initialize WordPress hooks
+     */
+    private function init_hooks() {
+        add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
+        add_action('wp_ajax_generate_listing_pdf', array($this, 'handle_pdf_generation'));
+        add_action('wp_ajax_nopriv_generate_listing_pdf', array($this, 'handle_pdf_generation'));
+        add_action('wp_footer', array($this, 'add_pdf_button_to_listings'));
+    }
+    
+    /**
+     * Enqueue necessary scripts and styles
+     */
+    public function enqueue_scripts() {
+        // Only load on single listing pages
+        if (is_singular() && $this->is_listing_post_type()) {
+            wp_enqueue_script('jquery');
+            wp_add_inline_script('jquery', $this->get_pdf_button_script());
+        }
+    }
+    
+    /**
+     * Check if current post is a listing
+     */
+    private function is_listing_post_type() {
+        $post = get_post();
+        if (!$post) return false;
+        
+        // Check for common listing post types
+        $listing_types = array('listing', 'business', 'farm', 'directory');
+        return in_array($post->post_type, $listing_types) || 
+               has_term('', 'listing_type', $post->ID) ||
+               has_term('', 'listing_categories', $post->ID);
+    }
+    
+    /**
+     * Check if current user can generate PDF for this listing
+     */
+    private function user_can_generate_pdf($post_id = null) {
+        // Must be logged in
+        if (!is_user_logged_in()) {
+            return false;
+        }
+        
+        $current_user_id = get_current_user_id();
+        $post_id = $post_id ?: get_the_ID();
+        
+        if (!$post_id) {
+            return false;
+        }
+        
+        $post = get_post($post_id);
+        if (!$post) {
+            return false;
+        }
+        
+        // Check if user is the author of the listing
+        if ($post->post_author == $current_user_id) {
+            return true;
+        }
+        
+        // Check if user has edit permissions for this post
+        if (current_user_can('edit_post', $post_id)) {
+            return true;
+        }
+        
+        // Check if user is admin or has manage_options capability
+        if (current_user_can('manage_options')) {
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Add PDF button to listing pages (only for listing owners)
+     */
+    public function add_pdf_button_to_listings() {
+        if (!is_singular() || !$this->is_listing_post_type()) {
+            return;
+        }
+        
+        // Check if user is logged in and owns the listing
+        if (!$this->user_can_generate_pdf()) {
+            return;
+        }
+        
+        $post_id = get_the_ID();
+        $button_html = sprintf(
+            '<div id="pdf-generator-button" style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
+                <button type="button" id="generate-pdf-btn" class="pdf-generator-btn" data-post-id="%d">
+                    📄 Generate PDF
+                </button>
+            </div>',
+            $post_id
+        );
+        
+        echo $button_html;
+    }
+    
+    /**
+     * Get JavaScript for PDF button functionality
+     */
+    private function get_pdf_button_script() {
+        return "
+        jQuery(document).ready(function($) {
+            $('#generate-pdf-btn').on('click', function(e) {
+                e.preventDefault();
+                
+                var button = $(this);
+                var postId = button.data('post-id');
+                var originalText = button.text();
+                
+                // Show loading state
+                button.prop('disabled', true).text('Generating...');
+                
+                // Create a form to submit the request
+                var form = $('<form>', {
+                    method: 'POST',
+                    action: '" . admin_url('admin-ajax.php') . "',
+                    target: '_blank'
+                });
+                
+                form.append($('<input>', {
+                    type: 'hidden',
+                    name: 'action',
+                    value: 'generate_listing_pdf'
+                }));
+                
+                form.append($('<input>', {
+                    type: 'hidden',
+                    name: 'post_id',
+                    value: postId
+                }));
+                
+                form.append($('<input>', {
+                    type: 'hidden',
+                    name: 'nonce',
+                    value: '" . wp_create_nonce('generate_pdf_nonce') . "'
+                }));
+                
+                // Submit form
+                $('body').append(form);
+                form.submit();
+                form.remove();
+                
+                // Reset button after a delay
+                setTimeout(function() {
+                    button.prop('disabled', false).text(originalText);
+                }, 2000);
+            });
+        });
+        
+        // Add button styles
+        var style = document.createElement('style');
+        style.textContent = `
+            .pdf-generator-btn {
+                background: linear-gradient(135deg, #004D43 0%, #6AA338 100%);
+                color: white;
+                border: none;
+                padding: 12px 20px;
+                border-radius: 25px;
+                font-size: 14px;
+                font-weight: bold;
+                cursor: pointer;
+                box-shadow: 0 4px 15px rgba(0, 77, 67, 0.3);
+                transition: all 0.3s ease;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+            
+            .pdf-generator-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(0, 77, 67, 0.4);
+            }
+            
+            .pdf-generator-btn:disabled {
+                opacity: 0.7;
+                cursor: not-allowed;
+                transform: none;
+            }
+        `;
+        document.head.appendChild(style);
+        ";
+    }
+    
+    /**
+     * Handle PDF generation AJAX request
+     */
+    public function handle_pdf_generation() {
+        // Verify nonce
+        if (!wp_verify_nonce($_POST['nonce'], 'generate_pdf_nonce')) {
+            wp_die('Security check failed');
+        }
+        
+        $post_id = intval($_POST['post_id']);
+        
+        if (!$post_id || !get_post($post_id)) {
+            wp_die('Invalid post ID');
+        }
+        
+        // Check if user has permission to generate PDF for this listing
+        if (!$this->user_can_generate_pdf($post_id)) {
+            wp_die('You do not have permission to generate PDF for this listing');
+        }
+        
+        // Generate PDF
+        $pdf_content = $this->pdf_generator->create_listing_pdf($post_id);
+        
+        if (!$pdf_content) {
+            wp_die('Failed to generate PDF');
+        }
+        
+        // Get post title for filename
+        $post_title = get_the_title($post_id);
+        $filename = sanitize_file_name($post_title . '_listing.pdf');
+        
+        // Set headers for PDF download
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Content-Length: ' . strlen($pdf_content));
+        header('Cache-Control: private, max-age=0, must-revalidate');
+        header('Pragma: public');
+        
+        echo $pdf_content;
+        exit;
+    }
+}
+
+// Initialize the plugin
+new CompleteListingPDFPlugin();
 
 ?>
