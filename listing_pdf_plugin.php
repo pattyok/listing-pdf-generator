@@ -523,7 +523,7 @@ class CompleteListingPDFPlugin {
         // Only load on single listing pages
         if (is_singular() && $this->is_listing_post_type()) {
             wp_enqueue_script('jquery');
-            wp_add_inline_script('jquery', $this->get_pdf_button_script());
+            // JavaScript is now handled in add_pdf_button_via_javascript()
         }
     }
     
@@ -586,6 +586,7 @@ class CompleteListingPDFPlugin {
         }
         
         $post_id = get_the_ID();
+        echo $this->get_pdf_button_styles();
         ?>
         <script type="text/javascript">
         jQuery(document).ready(function($) {
@@ -641,6 +642,53 @@ class CompleteListingPDFPlugin {
             if (!inserted) {
                 $('footer').first().before(pdfButton);
             }
+            
+            // IMPORTANT: Add click event handler to the dynamically created button
+            $(document).on('click', '#generate-pdf-btn', function(e) {
+                e.preventDefault();
+                
+                var button = $(this);
+                var postId = button.data('post-id');
+                var originalText = button.text();
+                
+                // Show loading state
+                button.prop('disabled', true).text('Generating...');
+                
+                // Create a form to submit the request
+                var form = $('<form>', {
+                    method: 'POST',
+                    action: '<?php echo admin_url('admin-ajax.php'); ?>',
+                    target: '_blank'
+                });
+                
+                form.append($('<input>', {
+                    type: 'hidden',
+                    name: 'action',
+                    value: 'generate_listing_pdf'
+                }));
+                
+                form.append($('<input>', {
+                    type: 'hidden',
+                    name: 'post_id',
+                    value: postId
+                }));
+                
+                form.append($('<input>', {
+                    type: 'hidden',
+                    name: 'nonce',
+                    value: '<?php echo wp_create_nonce('generate_pdf_nonce'); ?>'
+                }));
+                
+                // Submit form
+                $('body').append(form);
+                form.submit();
+                form.remove();
+                
+                // Reset button after a delay
+                setTimeout(function() {
+                    button.prop('disabled', false).text(originalText);
+                }, 2000);
+            });
         });
         </script>
         <?php
@@ -670,63 +718,13 @@ class CompleteListingPDFPlugin {
     }
     
     /**
-     * Get JavaScript for PDF button functionality
+     * Get CSS styles for PDF button (now used in JavaScript placement function)
      */
-    private function get_pdf_button_script() {
+    private function get_pdf_button_styles() {
         return "
-        jQuery(document).ready(function($) {
-            $('#generate-pdf-btn').on('click', function(e) {
-                e.preventDefault();
-                
-                var button = $(this);
-                var postId = button.data('post-id');
-                var originalText = button.text();
-                
-                // Show loading state
-                button.prop('disabled', true).text('Generating...');
-                
-                // Create a form to submit the request
-                var form = $('<form>', {
-                    method: 'POST',
-                    action: '" . admin_url('admin-ajax.php') . "',
-                    target: '_blank'
-                });
-                
-                form.append($('<input>', {
-                    type: 'hidden',
-                    name: 'action',
-                    value: 'generate_listing_pdf'
-                }));
-                
-                form.append($('<input>', {
-                    type: 'hidden',
-                    name: 'post_id',
-                    value: postId
-                }));
-                
-                form.append($('<input>', {
-                    type: 'hidden',
-                    name: 'nonce',
-                    value: '" . wp_create_nonce('generate_pdf_nonce') . "'
-                }));
-                
-                // Submit form
-                $('body').append(form);
-                form.submit();
-                form.remove();
-                
-                // Reset button after a delay
-                setTimeout(function() {
-                    button.prop('disabled', false).text(originalText);
-                }, 2000);
-            });
-        });
-        
-        // Add button styles
-        var style = document.createElement('style');
-        style.textContent = `
+        <style>
             .pdf-generator-wrapper {
-                margin: 20px 0 !important;
+                margin: 15px 0 !important;
                 padding: 15px;
                 background-color: #f9f9f9;
                 border: 1px solid #ddd;
@@ -767,8 +765,7 @@ class CompleteListingPDFPlugin {
                 outline: 2px solid #6AA338;
                 outline-offset: 2px;
             }
-        `;
-        document.head.appendChild(style);
+        </style>
         ";
     }
     
