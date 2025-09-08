@@ -58,7 +58,24 @@ class SimpleListingPDFGenerator {
             $qr_code = $this->generate_qr_code(get_permalink($post_id));
             
             if (!class_exists('TCPDF')) {
-                require_once(plugin_dir_path(__FILE__) . '../vendor/tecnickcom/tcpdf/tcpdf.php');
+                // TCPDF should already be loaded by the AJAX handler
+                // But try to load it if it's not available
+                $tcpdf_paths = array(
+                    plugin_dir_path(__FILE__) . 'vendor/tecnickcom/tcpdf/tcpdf.php',
+                    plugin_dir_path(__FILE__) . '../vendor/tecnickcom/tcpdf/tcpdf.php',
+                    ABSPATH . 'vendor/tecnickcom/tcpdf/tcpdf.php'
+                );
+                
+                foreach ($tcpdf_paths as $path) {
+                    if (file_exists($path)) {
+                        require_once($path);
+                        break;
+                    }
+                }
+                
+                if (!class_exists('TCPDF')) {
+                    throw new Exception('TCPDF class not available');
+                }
             }
             
             $pdf = new TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
@@ -689,45 +706,95 @@ class CompleteListingPDFPlugin {
     }
     
     /**
-     * Handle PDF generation AJAX request
+     * Handle PDF generation AJAX request - WITH BETTER ERROR HANDLING
      */
     public function handle_pdf_generation() {
-        // Verify nonce
-        if (!wp_verify_nonce($_POST['nonce'], 'generate_pdf_nonce')) {
-            wp_die('Security check failed');
+        try {
+            // Log debug info
+            error_log('PDF Generation AJAX Request: ' . print_r($_POST, true));
+            
+            // Check if required fields exist
+            if (!isset($_POST['nonce'])) {
+                wp_die('Missing nonce parameter');
+            }
+            
+            if (!isset($_POST['post_id'])) {
+                wp_die('Missing post_id parameter');
+            }
+            
+            // Verify nonce
+            if (!wp_verify_nonce($_POST['nonce'], 'generate_pdf_nonce')) {
+                error_log('PDF Generation: Nonce verification failed');
+                wp_die('Security check failed');
+            }
+            
+            $post_id = intval($_POST['post_id']);
+            
+            if (!$post_id || !get_post($post_id)) {
+                error_log('PDF Generation: Invalid post ID: ' . $post_id);
+                wp_die('Invalid post ID');
+            }
+            
+            // Check if user has permission to generate PDF for this listing
+            if (!$this->user_can_generate_pdf($post_id)) {
+                error_log('PDF Generation: Permission denied for user ' . get_current_user_id() . ' on post ' . $post_id);
+                wp_die('You do not have permission to generate PDF for this listing');
+            }
+            
+            // Check if TCPDF is available - try multiple paths
+            if (!class_exists('TCPDF')) {
+                $tcpdf_paths = array(
+                    plugin_dir_path(__FILE__) . 'vendor/tecnickcom/tcpdf/tcpdf.php',
+                    plugin_dir_path(__FILE__) . '../vendor/tecnickcom/tcpdf/tcpdf.php',
+                    ABSPATH . 'vendor/tecnickcom/tcpdf/tcpdf.php',
+                    '/usr/local/lib/php/tcpdf/tcpdf.php'
+                );
+                
+                $tcpdf_loaded = false;
+                foreach ($tcpdf_paths as $path) {
+                    if (file_exists($path)) {
+                        require_once($path);
+                        $tcpdf_loaded = true;
+                        error_log('PDF Generation: TCPDF loaded from: ' . $path);
+                        break;
+                    }
+                }
+                
+                if (!$tcpdf_loaded) {
+                    error_log('PDF Generation: TCPDF not found in any standard locations');
+                    wp_die('PDF library not available. Please install TCPDF via Composer or contact administrator.');
+                }
+            }
+            
+            // Generate PDF
+            error_log('PDF Generation: Attempting to generate PDF for post ' . $post_id);
+            $pdf_content = $this->pdf_generator->create_listing_pdf($post_id);
+            
+            if (!$pdf_content) {
+                error_log('PDF Generation: Failed to create PDF content');
+                wp_die('Failed to generate PDF - check error logs');
+            }
+            
+            // Get post title for filename
+            $post_title = get_the_title($post_id);
+            $filename = sanitize_file_name($post_title . '_listing.pdf');
+            
+            error_log('PDF Generation: Success! Generated PDF for post ' . $post_id . ', size: ' . strlen($pdf_content) . ' bytes');
+            
+            // Set headers for PDF download
+            header('Content-Type: application/pdf');
+            header('Content-Disposition: attachment; filename="' . $filename . '"');
+            header('Content-Length: ' . strlen($pdf_content));
+            header('Cache-Control: private, max-age=0, must-revalidate');
+            header('Pragma: public');
+            
+            echo $pdf_content;
+            exit;
+            
+        } catch (Exception $e) {
+            error_log('PDF Generation Exception: ' . $e->getMessage());
+            wp_die('PDF Generation Error: ' . $e->getMessage());
         }
-        
-        $post_id = intval($_POST['post_id']);
-        
-        if (!$post_id || !get_post($post_id)) {
-            wp_die('Invalid post ID');
-        }
-        
-        // Check if user has permission to generate PDF for this listing
-        if (!$this->user_can_generate_pdf($post_id)) {
-            wp_die('You do not have permission to generate PDF for this listing');
-        }
-        
-        // Generate PDF
-        $pdf_content = $this->pdf_generator->create_listing_pdf($post_id);
-        
-        if (!$pdf_content) {
-            wp_die('Failed to generate PDF');
-        }
-        
-        // Get post title for filename
-        $post_title = get_the_title($post_id);
-        $filename = sanitize_file_name($post_title . '_listing.pdf');
-        
-        // Set headers for PDF download
-        header('Content-Type: application/pdf');
-        header('Content-Disposition: attachment; filename="' . $filename . '"');
-        header('Content-Length: ' . strlen($pdf_content));
-        header('Cache-Control: private, max-age=0, must-revalidate');
-        header('Pragma: public');
-        
-        echo $pdf_content;
-        exit;
     }
 }
 
