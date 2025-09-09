@@ -304,8 +304,8 @@ class SimpleListingPDFGenerator {
         $hero_image_section = '';
         if ($data['hero_image']) {
             $hero_image_section = sprintf(
-                '<div style="text-align: center; margin: 15px 0;">
-                    <img src="%s" style="max-width: 80px; max-height: 32px; width: auto; height: auto;" alt="Business Image">
+                '<div style="text-align: center; margin: 8px 0;">
+                    <img src="%s" style="max-width: 60px; max-height: 20px; width: auto; height: auto;" alt="Business Image">
                 </div>',
                 esc_url($data['hero_image'])
             );
