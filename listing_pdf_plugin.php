@@ -976,7 +976,7 @@ class CompleteListingPDFPlugin {
             
         } catch (Exception $e) {
             error_log('PDF Generation Exception: ' . $e->getMessage());
-            wp_die('PDF Generation Error: ' . $e->getMessage());
+            wp_die('PDF Generation Error: ' . $e->getMessage() . '<br><br><strong>Stack Trace:</strong><br><pre>' . $e->getTraceAsString() . '</pre>');
         }
     }
 }
