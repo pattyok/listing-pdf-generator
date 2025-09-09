@@ -323,10 +323,26 @@ class SimpleListingPDFGenerator {
                 text-align: center;
             }
             
-            .contact-section {
+            .two-column-section {
+                margin: 15px 0;
+                overflow: hidden;
+            }
+            
+            .left-column {
+                float: left;
+                width: 75%;
+                padding-right: 15px;
+            }
+            
+            .right-column {
+                float: right;
+                width: 25%;
+                text-align: center;
+            }
+            
+            .contact-info {
                 background-color: #f0f0f0;
                 padding: 15px;
-                margin: 15px 0;
                 border-left: 4px solid #6AA338;
             }
             
@@ -340,6 +356,20 @@ class SimpleListingPDFGenerator {
                 color: #004D43;
                 width: 70px;
                 display: inline-block;
+            }
+            
+            .qr-container {
+                background-color: white;
+                border: 1px solid #ddd;
+                padding: 10px;
+                border-radius: 5px;
+            }
+            
+            .qr-title {
+                font-size: 10pt;
+                font-weight: bold;
+                margin-bottom: 8px;
+                color: #004D43;
             }
             
             .section {
@@ -418,12 +448,23 @@ class SimpleListingPDFGenerator {
         
         %s
         
-        <div class="contact-section">
-            <div style="font-weight: bold; color: #004D43; margin-bottom: 10px;">Contact Information</div>
-            %s
-            %s
-            %s
-            %s
+        <div class="two-column-section">
+            <div class="left-column">
+                <div class="contact-info">
+                    <div style="font-weight: bold; color: #004D43; margin-bottom: 10px;">Contact Information</div>
+                    %s
+                    %s
+                    %s
+                    %s
+                </div>
+            </div>
+            <div class="right-column">
+                <div class="qr-container">
+                    <div class="qr-title">Visit Online</div>
+                    <img src="%s" style="width: 80px; height: 80px;" alt="QR Code">
+                </div>
+            </div>
+            <div style="clear: both;"></div>
         </div>
         
         %s
@@ -437,12 +478,6 @@ class SimpleListingPDFGenerator {
         %s
         
         %s
-        
-        <div class="qr-section">
-            <div class="qr-title">Visit Online</div>
-            <img src="%s" style="width: 100px; height: 100px;" alt="QR Code">
-            <br><strong>Location:</strong> %s
-        </div>
         
         <div class="footer">
             <div class="website-url">%s</div>
@@ -456,18 +491,17 @@ class SimpleListingPDFGenerator {
         esc_html($data['name']),
         !empty($data['business_type']) ? '<div class="business-type">' . esc_html($data['business_type']) . '</div>' : '',
         $hero_image_section,
-        !empty($data['location']) ? '<div class="contact-item"><span class="contact-label">Location:</span> ' . esc_html($data['location']) . '</div>' : '',
+        !empty($data['location']) ? '<div class="contact-item"><span class="contact-label">Address:</span> ' . esc_html($data['location']) . '</div>' : '',
         !empty($data['email']) ? '<div class="contact-item"><span class="contact-label">Email:</span> ' . esc_html($data['email']) . '</div>' : '',
         !empty($data['phone']) ? '<div class="contact-item"><span class="contact-label">Phone:</span> ' . esc_html($data['phone']) . '</div>' : '',
         !empty($data['website']) ? '<div class="contact-item"><span class="contact-label">Website:</span> ' . esc_html($data['website']) . '</div>' : '',
+        $qr_code,
         !empty($data['certifications']) ? '<div class="section"><div class="section-title">Certifications</div><div>' . $this->format_certifications($data['certifications']) . '</div></div>' : '',
         !empty($data['products']) ? '<div class="section"><div class="section-title">Products & Services</div><div class="section-content products-list">' . nl2br(esc_html($data['products'])) . '</div></div>' : '',
         !empty($data['about']) ? '<div class="section"><div class="section-title">About Us</div><div class="section-content">' . nl2br(esc_html(wp_trim_words($data['about'], 100))) . '</div></div>' : '',
         !empty($data['growing_practices']) ? '<div class="section"><div class="section-title">Growing Practices</div><div class="section-content">' . nl2br(esc_html($data['growing_practices'])) . '</div></div>' : '',
         !empty($data['retail_info']) ? '<div class="section"><div class="section-title">Retail Information</div><div class="section-content">' . nl2br(esc_html($data['retail_info'])) . '</div></div>' : '',
         !empty($data['payment_methods']) ? '<div class="section"><div class="section-title">Payment Methods</div><div class="section-content">' . esc_html($data['payment_methods']) . '</div></div>' : '',
-        $qr_code,
-        esc_html($data['location'] ?: $data['address'] ?: 'Location not specified'),
         esc_html($data['website'] ?: $data['url']),
         esc_html($data['updated'])
         );
