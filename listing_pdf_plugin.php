@@ -633,6 +633,10 @@ class CompleteListingPDFPlugin {
         add_action('wp_footer', array($this, 'add_pdf_button_via_javascript'));
         add_action('genesis_entry_footer', array($this, 'add_pdf_button_to_entry_footer'));
         add_action('thesis_hook_after_post', array($this, 'add_pdf_button_to_entry_footer'));
+        
+        // Add debug page for admins
+        add_action('wp_ajax_pdf_debug_test', array($this, 'handle_debug_test'));
+        add_action('wp_footer', array($this, 'add_debug_link_for_admins'));
     }
     
     /**
@@ -977,6 +981,67 @@ class CompleteListingPDFPlugin {
         } catch (Exception $e) {
             error_log('PDF Generation Exception: ' . $e->getMessage());
             wp_die('PDF Generation Error: ' . $e->getMessage() . '<br><br><strong>Stack Trace:</strong><br><pre>' . $e->getTraceAsString() . '</pre>');
+        }
+    }
+    
+    /**
+     * Handle PDF debug test (admin only)
+     */
+    public function handle_debug_test() {
+        // Security check
+        if (!current_user_can('manage_options')) {
+            wp_die('Access denied');
+        }
+        
+        echo "<h1>🐞 PDF Generation Debug Test</h1>";
+        
+        // Find a post to test with
+        $test_post = get_posts(array('numberposts' => 1, 'post_status' => 'publish'));
+        if (empty($test_post)) {
+            echo "<p>❌ No published posts found for testing</p>";
+            wp_die();
+        }
+        
+        $post_id = $test_post[0]->ID;
+        echo "<p>Testing with post: <strong>" . esc_html($test_post[0]->post_title) . "</strong> (ID: $post_id)</p>";
+        
+        // Enable error display
+        ini_set('display_errors', 1);
+        error_reporting(E_ALL);
+        
+        try {
+            $pdf_generator = new SimpleListingPDFGenerator();
+            echo "<p>✅ PDF Generator class created</p>";
+            
+            $pdf_content = $pdf_generator->create_listing_pdf($post_id);
+            
+            if ($pdf_content) {
+                echo "<p>✅ PDF generated successfully! Size: " . strlen($pdf_content) . " bytes</p>";
+                echo "<p>✅ Test completed - PDF generation is working!</p>";
+            } else {
+                echo "<p>❌ PDF generation returned false</p>";
+            }
+        } catch (Exception $e) {
+            echo "<p>❌ Error: " . esc_html($e->getMessage()) . "</p>";
+            echo "<pre>" . esc_html($e->getTraceAsString()) . "</pre>";
+        } catch (Error $e) {
+            echo "<p>❌ Fatal Error: " . esc_html($e->getMessage()) . "</p>";
+            echo "<pre>" . esc_html($e->getTraceAsString()) . "</pre>";
+        }
+        
+        wp_die();
+    }
+    
+    /**
+     * Add debug link for admins
+     */
+    public function add_debug_link_for_admins() {
+        if (current_user_can('manage_options')) {
+            echo '<div id="pdf-debug-link" style="position: fixed; bottom: 20px; left: 20px; z-index: 9999; background: #333; color: white; padding: 10px; border-radius: 5px;">
+                <a href="#" onclick="window.open(\''. admin_url('admin-ajax.php') .'?action=pdf_debug_test\', \'_blank\', \'width=800,height=600,scrollbars=yes\'); return false;" style="color: #fff; text-decoration: none;">
+                    🐞 Debug PDF
+                </a>
+            </div>';
         }
     }
 }
