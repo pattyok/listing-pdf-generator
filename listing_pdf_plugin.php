@@ -333,9 +333,7 @@ class SimpleListingPDFGenerator {
             }
             
             .business-type {
-                background-color: #6AA338;
-                color: white;
-                padding: 5px 12px;
+                color: #004D43;
                 font-size: 10pt;
                 font-weight: bold;
                 margin-bottom: 15px;
