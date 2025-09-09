@@ -45,6 +45,7 @@ class SimpleListingPDFGenerator {
             'retail_info' => 'listing_retail_info',
             'wholesale_info' => 'listing_wholesale_info',
             'csa_info' => 'listing_csa_info',
+            'listing_features' => 'listing_features', // taxonomy
             'payment_methods' => 'listing_features', // taxonomy filtered
         );
     }
@@ -482,6 +483,7 @@ class SimpleListingPDFGenerator {
         $qr_code,
         !empty($data['about']) ? '<div class="section"><div class="section-title">About Us</div><div class="section-content">' . nl2br(esc_html(wp_trim_words($data['about'], 100))) . '</div></div>' : '',
         !empty($data['products']) ? '<div class="section"><div class="section-title">Products & Services</div><div class="section-content products-list">' . nl2br(esc_html($data['products'])) . '</div></div>' : '',
+        !empty($data['listing_features']) ? '<div class="section"><div class="section-title">Where to Purchase</div><div class="section-content">' . esc_html($data['listing_features']) . '</div></div>' : '',
         !empty($data['certifications']) ? '<div class="section"><div class="section-title">Certifications</div><div>' . $this->format_certifications($data['certifications']) . '</div></div>' : '',
         !empty($data['growing_practices']) ? '<div class="section"><div class="section-title">Growing Practices</div><div class="section-content">' . nl2br(esc_html($data['growing_practices'])) . '</div></div>' : '',
         !empty($data['retail_info']) ? '<div class="section"><div class="section-title">Retail Information</div><div class="section-content">' . nl2br(esc_html($data['retail_info'])) . '</div></div>' : '',
