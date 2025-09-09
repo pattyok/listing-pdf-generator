@@ -995,15 +995,28 @@ class CompleteListingPDFPlugin {
         
         echo "<h1>🐞 PDF Generation Debug Test</h1>";
         
-        // Find a post to test with
-        $test_post = get_posts(array('numberposts' => 1, 'post_status' => 'publish'));
-        if (empty($test_post)) {
-            echo "<p>❌ No published posts found for testing</p>";
-            wp_die();
+        // Use specified post ID or find a post to test with
+        $post_id = isset($_GET['post_id']) ? intval($_GET['post_id']) : 0;
+        
+        if ($post_id) {
+            $test_post = get_post($post_id);
+            if (!$test_post) {
+                echo "<p>❌ Post with ID $post_id not found</p>";
+                wp_die();
+            }
+        } else {
+            // Fallback: find any published post
+            $test_posts = get_posts(array('numberposts' => 1, 'post_status' => 'publish'));
+            if (empty($test_posts)) {
+                echo "<p>❌ No published posts found for testing</p>";
+                wp_die();
+            }
+            $test_post = $test_posts[0];
+            $post_id = $test_post->ID;
         }
         
-        $post_id = $test_post[0]->ID;
-        echo "<p>Testing with post: <strong>" . esc_html($test_post[0]->post_title) . "</strong> (ID: $post_id)</p>";
+        echo "<p>Testing with post: <strong>" . esc_html($test_post->post_title) . "</strong> (ID: $post_id)</p>";
+        echo "<p>Post type: <strong>" . esc_html($test_post->post_type) . "</strong></p>";
         
         // Enable error display
         ini_set('display_errors', 1);
@@ -1036,10 +1049,11 @@ class CompleteListingPDFPlugin {
      * Add debug link for admins
      */
     public function add_debug_link_for_admins() {
-        if (current_user_can('manage_options')) {
+        if (current_user_can('manage_options') && is_singular()) {
+            $current_post_id = get_the_ID();
             echo '<div id="pdf-debug-link" style="position: fixed; bottom: 20px; left: 20px; z-index: 9999; background: #333; color: white; padding: 10px; border-radius: 5px;">
-                <a href="#" onclick="window.open(\''. admin_url('admin-ajax.php') .'?action=pdf_debug_test\', \'_blank\', \'width=800,height=600,scrollbars=yes\'); return false;" style="color: #fff; text-decoration: none;">
-                    🐞 Debug PDF
+                <a href="#" onclick="window.open(\''. admin_url('admin-ajax.php') .'?action=pdf_debug_test&post_id=' . $current_post_id . '\', \'_blank\', \'width=800,height=600,scrollbars=yes\'); return false;" style="color: #fff; text-decoration: none;">
+                    🐞 Debug PDF (This Post)
                 </a>
             </div>';
         }
