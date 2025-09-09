@@ -127,10 +127,24 @@ class SimpleListingPDFGenerator {
         } catch (Exception $e) {
             error_log('PDF Generation Error: ' . $e->getMessage());
             error_log('PDF Generation Error Stack: ' . $e->getTraceAsString());
+            
+            // DEBUGGING: Also echo the error if we're in debug mode
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                echo "PDF Generation Error: " . $e->getMessage() . "\n";
+                echo "Stack trace: " . $e->getTraceAsString() . "\n";
+            }
+            
             return false;
         } catch (Error $e) {
             error_log('PDF Generation Fatal Error: ' . $e->getMessage());
             error_log('PDF Generation Fatal Error Stack: ' . $e->getTraceAsString());
+            
+            // DEBUGGING: Also echo the error if we're in debug mode
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                echo "PDF Generation Fatal Error: " . $e->getMessage() . "\n";
+                echo "Stack trace: " . $e->getTraceAsString() . "\n";
+            }
+            
             return false;
         }
     }
