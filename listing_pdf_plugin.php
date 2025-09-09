@@ -1026,13 +1026,41 @@ class CompleteListingPDFPlugin {
             $pdf_generator = new SimpleListingPDFGenerator();
             echo "<p>✅ PDF Generator class created</p>";
             
+            // Capture any output/errors during PDF generation
+            ob_start();
             $pdf_content = $pdf_generator->create_listing_pdf($post_id);
+            $output = ob_get_clean();
+            
+            if ($output) {
+                echo "<p><strong>Output during PDF generation:</strong></p>";
+                echo "<pre style='background: #ffe6e6; padding: 10px;'>" . esc_html($output) . "</pre>";
+            }
             
             if ($pdf_content) {
                 echo "<p>✅ PDF generated successfully! Size: " . strlen($pdf_content) . " bytes</p>";
                 echo "<p>✅ Test completed - PDF generation is working!</p>";
             } else {
                 echo "<p>❌ PDF generation returned false</p>";
+                
+                // Check if TCPDF is available
+                if (!class_exists('TCPDF')) {
+                    echo "<p>❌ <strong>TCPDF class not found!</strong> This is likely the issue.</p>";
+                    
+                    // Show TCPDF paths we're checking
+                    $tcpdf_paths = array(
+                        plugin_dir_path(__FILE__) . 'vendor/tecnickcom/tcpdf/tcpdf.php',
+                        plugin_dir_path(__FILE__) . '../vendor/tecnickcom/tcpdf/tcpdf.php',
+                        ABSPATH . 'vendor/tecnickcom/tcpdf/tcpdf.php'
+                    );
+                    
+                    echo "<p><strong>Checking TCPDF paths:</strong></p>";
+                    foreach ($tcpdf_paths as $path) {
+                        $exists = file_exists($path);
+                        echo "<p>" . ($exists ? "✅" : "❌") . " " . esc_html($path) . "</p>";
+                    }
+                } else {
+                    echo "<p>✅ TCPDF class is available</p>";
+                }
             }
         } catch (Exception $e) {
             echo "<p>❌ Error: " . esc_html($e->getMessage()) . "</p>";
