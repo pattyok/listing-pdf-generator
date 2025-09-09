@@ -300,25 +300,14 @@ class SimpleListingPDFGenerator {
     private function build_html($data, $qr_code) {
         error_log(print_r($data, true));
         
-        // Hero image section - always side-by-side with About Us
+        // Hero image section
         $hero_image_section = '';
-        $about_in_image_section = false;
-        
         if ($data['hero_image']) {
-            $about_in_image_section = true;
             $hero_image_section = sprintf(
-                '<table style="width: 100%%; border-collapse: collapse; margin: 8px 0;">
-                    <tr>
-                        <td style="width: 35%%; vertical-align: top; padding-right: 20px; text-align: center;">
-                            <img src="%s" style="max-height: 200px; width: auto;" alt="Business Image">
-                        </td>
-                        <td style="width: 65%%; vertical-align: top;">
-                            %s
-                        </td>
-                    </tr>
-                </table>',
-                esc_url($data['hero_image']),
-                !empty($data['about']) ? '<div class="section"><div class="section-title">About Us</div><div class="section-content">' . nl2br(esc_html(wp_trim_words($data['about'], 100))) . '</div></div>' : ''
+                '<div style="text-align: center; margin: 8px 0;">
+                    <img src="%s" style="height: 164px; width: auto;" alt="Business Image">
+                </div>',
+                esc_url($data['hero_image'])
             );
         }
         
@@ -491,12 +480,11 @@ class SimpleListingPDFGenerator {
         !empty($data['phone']) ? '<div class="contact-item"><span class="contact-label">Phone:</span> ' . esc_html($data['phone']) . '</div>' : '',
         !empty($data['website']) ? '<div class="contact-item"><span class="contact-label">Website:</span> ' . esc_html($data['website']) . '</div>' : '',
         $qr_code,
-        ($about_in_image_section || empty($data['about'])) ? '' : '<div class="section"><div class="section-title">About Us</div><div class="section-content">' . nl2br(esc_html(wp_trim_words($data['about'], 100))) . '</div></div>',
+        !empty($data['about']) ? '<div class="section"><div class="section-title">About Us</div><div class="section-content">' . nl2br(esc_html(wp_trim_words($data['about'], 100))) . '</div></div>' : '',
         !empty($data['products']) ? '<div class="section"><div class="section-title">Products & Services</div><div class="section-content products-list">' . nl2br(esc_html($data['products'])) . '</div></div>' : '',
         !empty($data['certifications']) ? '<div class="section"><div class="section-title">Certifications</div><div>' . $this->format_certifications($data['certifications']) . '</div></div>' : '',
         !empty($data['growing_practices']) ? '<div class="section"><div class="section-title">Growing Practices</div><div class="section-content">' . nl2br(esc_html($data['growing_practices'])) . '</div></div>' : '',
         !empty($data['retail_info']) ? '<div class="section"><div class="section-title">Retail Information</div><div class="section-content">' . nl2br(esc_html($data['retail_info'])) . '</div></div>' : '',
-        !empty($data['payment_methods']) ? '<div class="section"><div class="section-title">Payment Methods</div><div class="section-content">' . esc_html($data['payment_methods']) . '</div></div>' : '',
         esc_html($data['website'] ?: $data['url']),
         esc_html($data['updated'])
         );
