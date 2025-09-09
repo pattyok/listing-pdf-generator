@@ -323,26 +323,10 @@ class SimpleListingPDFGenerator {
                 text-align: center;
             }
             
-            .two-column-section {
-                margin: 15px 0;
-                overflow: hidden;
-            }
-            
-            .left-column {
-                float: left;
-                width: 75%;
-                padding-right: 15px;
-            }
-            
-            .right-column {
-                float: right;
-                width: 25%;
-                text-align: center;
-            }
-            
-            .contact-info {
+            .contact-section {
                 background-color: #f0f0f0;
                 padding: 15px;
+                margin: 15px 0;
                 border-left: 4px solid #6AA338;
             }
             
@@ -358,11 +342,29 @@ class SimpleListingPDFGenerator {
                 display: inline-block;
             }
             
+            .two-column-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 15px 0;
+            }
+            
+            .left-cell {
+                width: 75%;
+                vertical-align: top;
+                padding-right: 15px;
+            }
+            
+            .right-cell {
+                width: 25%;
+                vertical-align: top;
+                text-align: center;
+            }
+            
             .qr-container {
                 background-color: white;
                 border: 1px solid #ddd;
                 padding: 10px;
-                border-radius: 5px;
+                text-align: center;
             }
             
             .qr-title {
@@ -448,24 +450,25 @@ class SimpleListingPDFGenerator {
         
         %s
         
-        <div class="two-column-section">
-            <div class="left-column">
-                <div class="contact-info">
-                    <div style="font-weight: bold; color: #004D43; margin-bottom: 10px;">Contact Information</div>
-                    %s
-                    %s
-                    %s
-                    %s
-                </div>
-            </div>
-            <div class="right-column">
-                <div class="qr-container">
-                    <div class="qr-title">Visit Online</div>
-                    <img src="%s" style="width: 80px; height: 80px;" alt="QR Code">
-                </div>
-            </div>
-            <div style="clear: both;"></div>
-        </div>
+        <table class="two-column-table">
+            <tr>
+                <td class="left-cell">
+                    <div class="contact-section">
+                        <div style="font-weight: bold; color: #004D43; margin-bottom: 10px;">Contact Information</div>
+                        %s
+                        %s
+                        %s
+                        %s
+                    </div>
+                </td>
+                <td class="right-cell">
+                    <div class="qr-container">
+                        <div class="qr-title">Visit Online</div>
+                        <img src="%s" style="width: 80px; height: 80px;" alt="QR Code">
+                    </div>
+                </td>
+            </tr>
+        </table>
         
         %s
         
