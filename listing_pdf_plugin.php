@@ -436,7 +436,7 @@ class SimpleListingPDFGenerator {
         <table style="width: 100%%; border-collapse: collapse; margin: 15px 0;">
             <tr>
                 <td style="width: 65%%; vertical-align: top; padding-right: 20px;">
-                    <div class="contact-section">
+                    <div style="padding: 15px;">
                         <div style="font-weight: bold; color: #004D43; margin-bottom: 10px;">Contact Information</div>
                         %s
                         %s
@@ -445,10 +445,9 @@ class SimpleListingPDFGenerator {
                     </div>
                 </td>
                 <td style="width: 35%%; vertical-align: top;">
-                    <div class="qr-section">
+                    <div style="text-align: center; padding: 15px;">
                         <div class="qr-title">Visit Online</div>
                         <img src="%s" style="width: 100px; height: 100px;" alt="QR Code">
-                        <br><strong>Location:</strong> %s
                     </div>
                 </td>
             </tr>
@@ -486,7 +485,6 @@ class SimpleListingPDFGenerator {
         !empty($data['phone']) ? '<div class="contact-item"><span class="contact-label">Phone:</span> ' . esc_html($data['phone']) . '</div>' : '',
         !empty($data['website']) ? '<div class="contact-item"><span class="contact-label">Website:</span> ' . esc_html($data['website']) . '</div>' : '',
         $qr_code,
-        esc_html($data['location'] ?: $data['address'] ?: 'Location not specified'),
         !empty($data['certifications']) ? '<div class="section"><div class="section-title">Certifications</div><div>' . $this->format_certifications($data['certifications']) . '</div></div>' : '',
         !empty($data['products']) ? '<div class="section"><div class="section-title">Products & Services</div><div class="section-content products-list">' . nl2br(esc_html($data['products'])) . '</div></div>' : '',
         !empty($data['about']) ? '<div class="section"><div class="section-title">About Us</div><div class="section-content">' . nl2br(esc_html(wp_trim_words($data['about'], 100))) . '</div></div>' : '',
