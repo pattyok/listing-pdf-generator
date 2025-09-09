@@ -54,8 +54,13 @@ class SimpleListingPDFGenerator {
      */
     public function create_listing_pdf($post_id) {
         try {
+            error_log('PDF Generation: Starting for post ID ' . $post_id);
+            
             $data = $this->extract_data($post_id);
+            error_log('PDF Generation: Data extracted - ' . print_r(array_keys($data), true));
+            
             $qr_code = $this->generate_qr_code(get_permalink($post_id));
+            error_log('PDF Generation: QR code generated - ' . $qr_code);
             
             if (!class_exists('TCPDF')) {
                 // TCPDF should already be loaded by the AJAX handler
@@ -69,6 +74,7 @@ class SimpleListingPDFGenerator {
                 foreach ($tcpdf_paths as $path) {
                     if (file_exists($path)) {
                         require_once($path);
+                        error_log('PDF Generation: TCPDF loaded from ' . $path);
                         break;
                     }
                 }
@@ -76,8 +82,11 @@ class SimpleListingPDFGenerator {
                 if (!class_exists('TCPDF')) {
                     throw new Exception('TCPDF class not available');
                 }
+            } else {
+                error_log('PDF Generation: TCPDF already loaded');
             }
             
+            error_log('PDF Generation: Creating TCPDF instance');
             $pdf = new TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
             $pdf->SetCreator('Eat Local First Directory');
             $pdf->SetTitle($data['name'] . ' - Listing');
@@ -87,13 +96,41 @@ class SimpleListingPDFGenerator {
             $pdf->SetAutoPageBreak(TRUE, 15);
             $pdf->AddPage();
             
-            $html = $this->build_html($data, $qr_code);
-            $pdf->writeHTML($html, true, false, true, false, '');
+            error_log('PDF Generation: Building HTML template');
             
-            return $pdf->Output('', 'S');
+            // Try main template first, fall back to simple template if it fails
+            try {
+                $html = $this->build_html($data, $qr_code);
+                
+                // Log HTML length and first 200 chars for debugging
+                error_log('PDF Generation: HTML length: ' . strlen($html));
+                error_log('PDF Generation: HTML preview: ' . substr($html, 0, 200) . '...');
+                
+                error_log('PDF Generation: Writing HTML to PDF');
+                $pdf->writeHTML($html, true, false, true, false, '');
+                
+            } catch (Exception $e) {
+                error_log('PDF Generation: Main template failed, trying simple template: ' . $e->getMessage());
+                
+                // Fallback to simple template
+                $simple_html = $this->build_simple_html($data, $qr_code);
+                error_log('PDF Generation: Using simple template, length: ' . strlen($simple_html));
+                $pdf->writeHTML($simple_html, true, false, true, false, '');
+            }
+            
+            error_log('PDF Generation: Generating PDF output');
+            $output = $pdf->Output('', 'S');
+            
+            error_log('PDF Generation: Success! PDF size: ' . strlen($output) . ' bytes');
+            return $output;
             
         } catch (Exception $e) {
             error_log('PDF Generation Error: ' . $e->getMessage());
+            error_log('PDF Generation Error Stack: ' . $e->getTraceAsString());
+            return false;
+        } catch (Error $e) {
+            error_log('PDF Generation Fatal Error: ' . $e->getMessage());
+            error_log('PDF Generation Fatal Error Stack: ' . $e->getTraceAsString());
             return false;
         }
     }
@@ -524,6 +561,51 @@ class SimpleListingPDFGenerator {
         }
         
         return $badges;
+    }
+    
+    /**
+     * Simple fallback HTML template for debugging
+     */
+    private function build_simple_html($data, $qr_code) {
+        return sprintf('
+        <style>
+            body { font-family: Arial, sans-serif; font-size: 12pt; }
+            .header { background-color: #004D43; color: white; padding: 15px; text-align: center; margin-bottom: 15px; }
+            .business-name { font-size: 18pt; font-weight: bold; margin-bottom: 10px; }
+            .contact { margin: 10px 0; }
+            .qr-section { text-align: center; margin: 15px 0; }
+        </style>
+        
+        <div class="header">
+            <h1>Eat Local First Directory</h1>
+        </div>
+        
+        <div class="business-name">%s</div>
+        
+        <div class="contact">
+            <strong>Address:</strong> %s<br>
+            <strong>Email:</strong> %s<br>
+            <strong>Phone:</strong> %s<br>
+            <strong>Website:</strong> %s
+        </div>
+        
+        <div class="qr-section">
+            <p><strong>Visit Online:</strong></p>
+            <img src="%s" style="width: 100px; height: 100px;" alt="QR Code">
+        </div>
+        
+        <div style="margin-top: 20px; font-size: 10pt; text-align: center;">
+            Generated from Eat Local First • Updated: %s
+        </div>',
+        
+        esc_html($data['name']),
+        esc_html($data['location'] ?: 'Not specified'),
+        esc_html($data['email'] ?: 'Not specified'), 
+        esc_html($data['phone'] ?: 'Not specified'),
+        esc_html($data['website'] ?: 'Not specified'),
+        $qr_code,
+        esc_html($data['updated'])
+        );
     }
 }
 
