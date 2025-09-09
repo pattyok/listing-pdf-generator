@@ -127,24 +127,10 @@ class SimpleListingPDFGenerator {
         } catch (Exception $e) {
             error_log('PDF Generation Error: ' . $e->getMessage());
             error_log('PDF Generation Error Stack: ' . $e->getTraceAsString());
-            
-            // DEBUGGING: Also echo the error if we're in debug mode
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                echo "PDF Generation Error: " . $e->getMessage() . "\n";
-                echo "Stack trace: " . $e->getTraceAsString() . "\n";
-            }
-            
             return false;
         } catch (Error $e) {
             error_log('PDF Generation Fatal Error: ' . $e->getMessage());
             error_log('PDF Generation Fatal Error Stack: ' . $e->getTraceAsString());
-            
-            // DEBUGGING: Also echo the error if we're in debug mode
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                echo "PDF Generation Fatal Error: " . $e->getMessage() . "\n";
-                echo "Stack trace: " . $e->getTraceAsString() . "\n";
-            }
-            
             return false;
         }
     }
@@ -1121,14 +1107,14 @@ class CompleteListingPDFPlugin {
     }
     
     /**
-     * Add debug link for admins
+     * Add debug link for admins (only show if WP_DEBUG is enabled)
      */
     public function add_debug_link_for_admins() {
-        if (current_user_can('manage_options') && is_singular()) {
+        if (current_user_can('manage_options') && is_singular() && defined('WP_DEBUG') && WP_DEBUG) {
             $current_post_id = get_the_ID();
-            echo '<div id="pdf-debug-link" style="position: fixed; bottom: 20px; left: 20px; z-index: 9999; background: #333; color: white; padding: 10px; border-radius: 5px;">
+            echo '<div id="pdf-debug-link" style="position: fixed; bottom: 20px; left: 20px; z-index: 9999; background: #333; color: white; padding: 8px 12px; border-radius: 4px; font-size: 12px;">
                 <a href="#" onclick="window.open(\''. admin_url('admin-ajax.php') .'?action=pdf_debug_test&post_id=' . $current_post_id . '\', \'_blank\', \'width=800,height=600,scrollbars=yes\'); return false;" style="color: #fff; text-decoration: none;">
-                    🐞 Debug PDF (This Post)
+                    🐞 Test PDF
                 </a>
             </div>';
         }
