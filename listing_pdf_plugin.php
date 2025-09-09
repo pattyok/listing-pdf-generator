@@ -433,13 +433,26 @@ class SimpleListingPDFGenerator {
         
         %s
         
-        <div class="contact-section">
-            <div style="font-weight: bold; color: #004D43; margin-bottom: 10px;">Contact Information</div>
-            %s
-            %s
-            %s
-            %s
-        </div>
+        <table style="width: 100%%; border-collapse: collapse; margin: 15px 0;">
+            <tr>
+                <td style="width: 65%%; vertical-align: top; padding-right: 20px;">
+                    <div class="contact-section">
+                        <div style="font-weight: bold; color: #004D43; margin-bottom: 10px;">Contact Information</div>
+                        %s
+                        %s
+                        %s
+                        %s
+                    </div>
+                </td>
+                <td style="width: 35%%; vertical-align: top;">
+                    <div class="qr-section">
+                        <div class="qr-title">Visit Online</div>
+                        <img src="%s" style="width: 100px; height: 100px;" alt="QR Code">
+                        <br><strong>Location:</strong> %s
+                    </div>
+                </td>
+            </tr>
+        </table>
         
         %s
         
@@ -452,12 +465,6 @@ class SimpleListingPDFGenerator {
         %s
         
         %s
-        
-        <div class="qr-section">
-            <div class="qr-title">Visit Online</div>
-            <img src="%s" style="width: 100px; height: 100px;" alt="QR Code">
-            <br><strong>Location:</strong> %s
-        </div>
         
         <div class="footer">
             <div class="website-url">%s</div>
@@ -478,14 +485,14 @@ class SimpleListingPDFGenerator {
         !empty($data['email']) ? '<div class="contact-item"><span class="contact-label">Email:</span> ' . esc_html($data['email']) . '</div>' : '',
         !empty($data['phone']) ? '<div class="contact-item"><span class="contact-label">Phone:</span> ' . esc_html($data['phone']) . '</div>' : '',
         !empty($data['website']) ? '<div class="contact-item"><span class="contact-label">Website:</span> ' . esc_html($data['website']) . '</div>' : '',
+        $qr_code,
+        esc_html($data['location'] ?: $data['address'] ?: 'Location not specified'),
         !empty($data['certifications']) ? '<div class="section"><div class="section-title">Certifications</div><div>' . $this->format_certifications($data['certifications']) . '</div></div>' : '',
         !empty($data['products']) ? '<div class="section"><div class="section-title">Products & Services</div><div class="section-content products-list">' . nl2br(esc_html($data['products'])) . '</div></div>' : '',
         !empty($data['about']) ? '<div class="section"><div class="section-title">About Us</div><div class="section-content">' . nl2br(esc_html(wp_trim_words($data['about'], 100))) . '</div></div>' : '',
         !empty($data['growing_practices']) ? '<div class="section"><div class="section-title">Growing Practices</div><div class="section-content">' . nl2br(esc_html($data['growing_practices'])) . '</div></div>' : '',
         !empty($data['retail_info']) ? '<div class="section"><div class="section-title">Retail Information</div><div class="section-content">' . nl2br(esc_html($data['retail_info'])) . '</div></div>' : '',
         !empty($data['payment_methods']) ? '<div class="section"><div class="section-title">Payment Methods</div><div class="section-content">' . esc_html($data['payment_methods']) . '</div></div>' : '',
-        $qr_code,
-        esc_html($data['location'] ?: $data['address'] ?: 'Location not specified'),
         esc_html($data['website'] ?: $data['url']),
         esc_html($data['updated'])
         );
