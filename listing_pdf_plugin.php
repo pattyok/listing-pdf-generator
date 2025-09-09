@@ -370,8 +370,6 @@ class SimpleListingPDFGenerator {
                 font-weight: bold;
                 color: #004D43;
                 margin-bottom: 10px;
-                border-bottom: 2px solid #6AA338;
-                padding-bottom: 5px;
             }
             
             .section-content {
@@ -386,8 +384,7 @@ class SimpleListingPDFGenerator {
             }
             
             .certification-badge {
-                background-color: #6AA338;
-                color: white;
+                color: #004D43;
                 padding: 4px 8px;
                 font-size: 9pt;
                 font-weight: bold;
