@@ -322,24 +322,6 @@ class SimpleListingPDFGenerator {
                 padding: 0; 
             }
             
-            .header {
-                background-color: #004D43;
-                color: white;
-                padding: 20px;
-                text-align: center;
-                margin-bottom: 20px;
-            }
-            
-            .header-title {
-                font-size: 18pt;
-                font-weight: bold;
-                margin-bottom: 5px;
-            }
-            
-            .header-subtitle {
-                font-size: 12pt;
-            }
-            
             .business-name {
                 font-size: 20pt;
                 font-weight: bold;
@@ -444,10 +426,6 @@ class SimpleListingPDFGenerator {
             }
         </style>
         
-        <div class="header">
-            <div class="header-title">Fresh • Local • Sustainable</div>
-            <div class="header-subtitle">Farm & Business Directory</div>
-        </div>
         
         <div class="business-name">%s</div>
         
@@ -484,7 +462,10 @@ class SimpleListingPDFGenerator {
         <div class="footer">
             <div class="website-url">%s</div>
             <div>Updated: %s</div>
-            <div style="margin-top: 10px; font-size: 8pt;">
+            <div style="margin-top: 10px; font-size: 10pt; font-weight: bold; color: #6AA338;">
+                Fresh • Local • Sustainable
+            </div>
+            <div style="margin-top: 5px; font-size: 8pt;">
                 Generated from Eat Local First • Visit eatlocalfirst.org
             </div>
         </div>',
