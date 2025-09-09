@@ -295,15 +295,26 @@ class SimpleListingPDFGenerator {
     }
     
     /**
-     * Build the universal HTML template
+     * Build the universal HTML template - WORKING VERSION with images
      */
     private function build_html($data, $qr_code) {
-		error_log(print_r($data, true));
+        error_log(print_r($data, true));
+        
+        // Hero image section
+        $hero_image_section = '';
+        if ($data['hero_image']) {
+            $hero_image_section = sprintf(
+                '<div style="text-align: center; margin: 15px 0;">
+                    <img src="%s" style="max-width: 200px; height: auto;" alt="Business Image">
+                </div>',
+                esc_url($data['hero_image'])
+            );
+        }
+        
         return sprintf('
         <style>
-            @page { size: letter; margin: 15mm; }
             body { 
-                font-family: Arial, sans-serif; 
+                font-family: DejaVu Sans, Arial, sans-serif; 
                 font-size: 11pt; 
                 line-height: 1.4; 
                 color: #333; 
@@ -312,69 +323,46 @@ class SimpleListingPDFGenerator {
             }
             
             .header {
-                background: linear-gradient(135deg, #004D43 0%%, #6AA338 100%%);
+                background-color: #004D43;
                 color: white;
                 padding: 20px;
                 text-align: center;
                 margin-bottom: 20px;
-                border-radius: 8px;
             }
             
             .header-title {
                 font-size: 18pt;
                 font-weight: bold;
                 margin-bottom: 5px;
-                text-transform: uppercase;
-                letter-spacing: 1px;
             }
             
             .header-subtitle {
                 font-size: 12pt;
-                opacity: 0.9;
-            }
-            
-            .content-wrapper {
-                display: flex;
-                gap: 20px;
-            }
-            
-            .main-content {
-                flex: 2;
-            }
-            
-            .sidebar {
-                flex: 1;
-                background: #f8f9fa;
-                padding: 15px;
-                border-radius: 8px;
-                height: fit-content;
             }
             
             .business-name {
-                font-size: 22pt;
+                font-size: 20pt;
                 font-weight: bold;
                 color: #004D43;
                 margin-bottom: 10px;
+                text-align: center;
                 border-bottom: 3px solid #6AA338;
                 padding-bottom: 8px;
             }
             
             .business-type {
-                background: #6AA338;
+                background-color: #6AA338;
                 color: white;
                 padding: 5px 12px;
-                border-radius: 15px;
-                font-size: 9pt;
+                font-size: 10pt;
                 font-weight: bold;
-                display: inline-block;
                 margin-bottom: 15px;
-                text-transform: uppercase;
+                text-align: center;
             }
             
             .contact-section {
-                background: #f0f0f0;
+                background-color: #f0f0f0;
                 padding: 15px;
-                border-radius: 6px;
                 margin: 15px 0;
                 border-left: 4px solid #6AA338;
             }
@@ -384,15 +372,11 @@ class SimpleListingPDFGenerator {
                 font-size: 11pt;
             }
             
-            .contact-item:last-child {
-                margin-bottom: 0;
-            }
-            
             .contact-label {
                 font-weight: bold;
                 color: #004D43;
-                display: inline-block;
                 width: 70px;
+                display: inline-block;
             }
             
             .section {
@@ -411,39 +395,30 @@ class SimpleListingPDFGenerator {
             .section-content {
                 font-size: 11pt;
                 line-height: 1.5;
-                text-align: justify;
             }
             
             .products-list {
-                background: #f0f8ff;
+                background-color: #f0f8ff;
                 padding: 12px;
-                border-radius: 6px;
                 border: 1px solid #d6e9f0;
             }
             
-            .certification-badges {
-                margin: 15px 0;
-            }
-            
             .certification-badge {
-                background: linear-gradient(135deg, #6AA338 0%%, #004D43 100%%);
+                background-color: #6AA338;
                 color: white;
-                padding: 6px 12px;
-                border-radius: 20px;
+                padding: 4px 8px;
                 font-size: 9pt;
                 font-weight: bold;
-                margin: 3px 5px 3px 0;
+                margin: 2px;
                 display: inline-block;
-                text-transform: uppercase;
             }
             
             .qr-section {
                 text-align: center;
                 padding: 15px;
-                background: white;
+                background-color: white;
                 border: 1px solid #ddd;
-                border-radius: 6px;
-                margin-bottom: 15px;
+                margin: 20px 0;
             }
             
             .qr-title {
@@ -451,20 +426,6 @@ class SimpleListingPDFGenerator {
                 font-weight: bold;
                 margin-bottom: 10px;
                 color: #004D43;
-            }
-            
-            .qr-image {
-                width: 100px;
-                height: 100px;
-            }
-            
-            .location-info {
-                background: white;
-                padding: 12px;
-                border: 1px solid #ddd;
-                border-radius: 6px;
-                font-size: 10pt;
-                text-align: center;
             }
             
             .footer {
@@ -488,43 +449,36 @@ class SimpleListingPDFGenerator {
             <div class="header-subtitle">Farm & Business Directory</div>
         </div>
         
-        <div class="content-wrapper">
-            <div class="main-content">
-                <div class="business-name">%s</div>
-                
-                %s
-                
-                <div class="contact-section">
-                    %s
-                    %s
-                    %s
-                    %s
-                </div>
-                
-                %s
-                
-                %s
-                
-                %s
-                
-                %s
-                
-                %s
-                
-                %s
-            </div>
-            
-            <div class="sidebar">
-                <div class="qr-section">
-                    <div class="qr-title">Visit Online</div>
-                    <img src="%s" alt="QR Code" class="qr-image">
-                </div>
-                
-                <div class="location-info">
-                    <strong>Location</strong><br>
-                    %s
-                </div>
-            </div>
+        <div class="business-name">%s</div>
+        
+        %s
+        
+        %s
+        
+        <div class="contact-section">
+            <div style="font-weight: bold; color: #004D43; margin-bottom: 10px;">Contact Information</div>
+            %s
+            %s
+            %s
+            %s
+        </div>
+        
+        %s
+        
+        %s
+        
+        %s
+        
+        %s
+        
+        %s
+        
+        %s
+        
+        <div class="qr-section">
+            <div class="qr-title">Visit Online</div>
+            <img src="%s" style="width: 100px; height: 100px;" alt="QR Code">
+            <br><strong>Location:</strong> %s
         </div>
         
         <div class="footer">
@@ -538,11 +492,12 @@ class SimpleListingPDFGenerator {
         // Data substitutions
         esc_html($data['name']),
         !empty($data['business_type']) ? '<div class="business-type">' . esc_html($data['business_type']) . '</div>' : '',
+        $hero_image_section,
         !empty($data['location']) ? '<div class="contact-item"><span class="contact-label">Location:</span> ' . esc_html($data['location']) . '</div>' : '',
         !empty($data['email']) ? '<div class="contact-item"><span class="contact-label">Email:</span> ' . esc_html($data['email']) . '</div>' : '',
         !empty($data['phone']) ? '<div class="contact-item"><span class="contact-label">Phone:</span> ' . esc_html($data['phone']) . '</div>' : '',
         !empty($data['website']) ? '<div class="contact-item"><span class="contact-label">Website:</span> ' . esc_html($data['website']) . '</div>' : '',
-        !empty($data['certifications']) ? '<div class="section"><div class="section-title">Certifications</div><div class="certification-badges">' . $this->format_certifications($data['certifications']) . '</div></div>' : '',
+        !empty($data['certifications']) ? '<div class="section"><div class="section-title">Certifications</div><div>' . $this->format_certifications($data['certifications']) . '</div></div>' : '',
         !empty($data['products']) ? '<div class="section"><div class="section-title">Products & Services</div><div class="section-content products-list">' . nl2br(esc_html($data['products'])) . '</div></div>' : '',
         !empty($data['about']) ? '<div class="section"><div class="section-title">About Us</div><div class="section-content">' . nl2br(esc_html(wp_trim_words($data['about'], 100))) . '</div></div>' : '',
         !empty($data['growing_practices']) ? '<div class="section"><div class="section-title">Growing Practices</div><div class="section-content">' . nl2br(esc_html($data['growing_practices'])) . '</div></div>' : '',
