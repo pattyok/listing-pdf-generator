@@ -29,23 +29,23 @@ class SimpleListingPDFGenerator {
     private $field_map;
     
     public function __construct() {
-        // Flexible field mapping - tries multiple common field names
+        // Simple field mapping from original working version
         $this->field_map = array(
             'name' => 'post_title',
-            'location' => array('listing_location', 'location', 'address', 'business_location'),
-            'address' => array('listing_full_address', 'full_address', 'address', 'street_address'),
-            'email' => array('listing_email', 'email', 'contact_email', 'business_email'),
-            'phone' => array('listing_phone', 'phone', 'contact_phone', 'business_phone'),
-            'website' => array('listing_website', 'website', 'url', 'business_website'),
+            'location' => 'listing_location',
+            'address' => 'listing_full_address', 
+            'email' => 'listing_email',
+            'phone' => 'listing_phone',
+            'website' => 'listing_website',
             'about' => 'post_content',
-            'business_type' => array('listing_type', 'business_type', 'type'), // taxonomy
-            'products' => array('listing_categories', 'products', 'categories', 'services'), // taxonomy
-            'certifications' => array('values_indicator', 'certifications', 'certified'), // taxonomy
-            'growing_practices' => array('listing_growing_practices', 'growing_practices', 'practices'),
-            'retail_info' => array('listing_retail_info', 'retail_info', 'retail'),
-            'wholesale_info' => array('listing_wholesale_info', 'wholesale_info', 'wholesale'),
-            'csa_info' => array('listing_csa_info', 'csa_info', 'csa'),
-            'payment_methods' => array('listing_features', 'payment_methods', 'payment', 'features'), // taxonomy filtered
+            'business_type' => 'listing_type', // taxonomy
+            'products' => 'listing_categories', // taxonomy
+            'certifications' => 'values_indicator', // taxonomy
+            'growing_practices' => 'listing_growing_practices',
+            'retail_info' => 'listing_retail_info',
+            'wholesale_info' => 'listing_wholesale_info',
+            'csa_info' => 'listing_csa_info',
+            'payment_methods' => 'listing_features', // taxonomy filtered
         );
     }
     
@@ -150,28 +150,15 @@ class SimpleListingPDFGenerator {
             'hero_image' => $this->get_hero_image($post_id),
         );
         
-        // Extract custom fields with flexible mapping
-        foreach ($this->field_map as $key => $field_names) {
+        // Extract custom fields - simple version
+        foreach ($this->field_map as $key => $field_name) {
             if ($key === 'name' || $key === 'about') continue; // Already handled
             
-            // Handle both single field names and arrays of field names
-            $field_list = is_array($field_names) ? $field_names : array($field_names);
-            $value = '';
-            
-            foreach ($field_list as $field_name) {
-                if ($this->is_taxonomy($field_name)) {
-                    $value = $this->get_taxonomy_data($post_id, $field_name, $key);
-                } else {
-                    $value = get_post_meta($post_id, $field_name, true);
-                }
-                
-                // If we found a value, use it and break
-                if (!empty($value)) {
-                    break;
-                }
+            if ($this->is_taxonomy($field_name)) {
+                $data[$key] = $this->get_taxonomy_data($post_id, $field_name, $key);
+            } else {
+                $data[$key] = get_post_meta($post_id, $field_name, true);
             }
-            
-            $data[$key] = $value;
         }
         
         // Clean empty values
@@ -185,33 +172,13 @@ class SimpleListingPDFGenerator {
     }
     
     /**
-     * Get hero image with flexible fallback priority
+     * Get hero image - simple version from original working code
      */
     private function get_hero_image($post_id) {
-        // Try multiple image field names
-        $image_fields = array(
-            'primary_image',
-            'logo_images_primary_image', 
-            'logo_images_your_logo',
-            'logo',
-            'featured_image',
-            'main_image'
-        );
-        
-        foreach ($image_fields as $field) {
-            $image_data = get_post_meta($post_id, $field, true);
-            if ($image_data) {
-                // Handle both URL strings and attachment IDs
-                if (is_numeric($image_data)) {
-                    $image_url = wp_get_attachment_image_url($image_data, 'medium');
-                } else {
-                    $image_url = $image_data;
-                }
-                
-                if ($image_url && $this->verify_image_accessible($image_url)) {
-                    return $image_url;
-                }
-            }
+        // Priority 1: Primary image field
+        $primary_image = get_post_meta($post_id, 'primary_image', true);
+        if ($primary_image && $this->verify_image_accessible($primary_image)) {
+            return $primary_image;
         }
         
         // Priority 2: Featured image
@@ -223,19 +190,22 @@ class SimpleListingPDFGenerator {
             }
         }
         
-        // Priority 3: Atlas gallery first image
-        $gallery_fields = array('_atlas_gallery', 'logo_images_additonal_images', 'gallery', 'images');
-        foreach ($gallery_fields as $field) {
-            $gallery_ids = get_post_meta($post_id, $field, true);
-            if ($gallery_ids && is_array($gallery_ids) && !empty($gallery_ids[0])) {
-                $image_url = wp_get_attachment_image_url($gallery_ids[0], 'medium');
-                if ($image_url && $this->verify_image_accessible($image_url)) {
-                    return $image_url;
-                }
+        // Priority 3: Logo field as fallback
+        $logo_image = get_post_meta($post_id, 'logo', true);
+        if ($logo_image && $this->verify_image_accessible($logo_image)) {
+            return $logo_image;
+        }
+        
+        // Priority 4: Atlas gallery first image
+        $gallery_ids = get_post_meta($post_id, '_atlas_gallery', true);
+        if ($gallery_ids && is_array($gallery_ids) && !empty($gallery_ids[0])) {
+            $image_url = wp_get_attachment_image_url($gallery_ids[0], 'medium');
+            if ($image_url && $this->verify_image_accessible($image_url)) {
+                return $image_url;
             }
         }
         
-        // Priority 4: First attached image
+        // Priority 5: First attached image
         $attachments = get_attached_media('image', $post_id);
         if (!empty($attachments)) {
             $first_attachment = reset($attachments);
@@ -267,15 +237,12 @@ class SimpleListingPDFGenerator {
     }
     
     /**
-     * Check if field is a taxonomy
+     * Check if field is a taxonomy - simple version
      */
     private function is_taxonomy($field_name) {
-        $taxonomies = array(
-            'listing_type', 'listing_categories', 'values_indicator', 'listing_features',
-            'business_type', 'type', 'products', 'categories', 'services',
-            'certifications', 'certified', 'payment_methods', 'payment', 'features'
-        );
-        return in_array($field_name, $taxonomies);
+        return in_array($field_name, array(
+            'listing_type', 'listing_categories', 'values_indicator', 'listing_features'
+        ));
     }
     
     /**
