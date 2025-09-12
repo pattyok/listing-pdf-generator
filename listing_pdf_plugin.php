@@ -294,19 +294,40 @@ class SimpleListingPDFGenerator {
     }
     
     /**
-     * Filter out "Services" category from products
+     * Filter out "Services" category from products and format subcategories
      */
     private function filter_products($products) {
         $filtered_products = array();
+        $subcategories = array();
         
         foreach ($products as $product) {
             // Skip any term that contains "Services" (case insensitive)
             if (stripos($product->name, 'services') === false) {
-                $filtered_products[] = $product->name;
+                $product_name = $product->name;
+                
+                // Check if this looks like a subcategory (longer descriptive names)
+                // Common subcategory patterns: contains "Locally", "Raised", "Grown", "Harvested", etc.
+                $subcategory_keywords = array('locally', 'raised', 'harvested', 'grown', 'organic', 'certified', 'fresh');
+                $is_subcategory = false;
+                
+                foreach ($subcategory_keywords as $keyword) {
+                    if (stripos($product_name, $keyword) !== false && strlen($product_name) > 15) {
+                        $is_subcategory = true;
+                        break;
+                    }
+                }
+                
+                if ($is_subcategory) {
+                    $subcategories[] = '<strong>' . $product_name . ':</strong>';
+                } else {
+                    $filtered_products[] = $product_name;
+                }
             }
         }
         
-        return implode(', ', $filtered_products);
+        // Combine subcategories and products
+        $result = array_merge($subcategories, $filtered_products);
+        return implode('<br>', $result);
     }
     
     /**
@@ -336,7 +357,7 @@ class SimpleListingPDFGenerator {
         return sprintf('
         <style>
             body { 
-                font-family: DejaVu Sans, Arial, sans-serif; 
+                font-family: helvetica, Arial, sans-serif; 
                 font-size: 11pt; 
                 line-height: 1.4; 
                 color: #333; 
@@ -499,7 +520,7 @@ class SimpleListingPDFGenerator {
         $qr_code,
         !empty($data['about']) ? '<div class="section"><div class="section-title">About Us</div><div class="section-content">' . nl2br(esc_html(wp_trim_words($data['about'], 100))) . '</div></div>' : '',
         !empty($data['csa_info']) ? '<div class="section"><div class="section-title">CSA Info</div><div class="section-content">' . nl2br(esc_html($data['csa_info'])) . '</div></div>' : '',
-        !empty($data['products']) ? '<div class="section"><div class="section-title">Products & Services</div><div class="section-content products-list">' . nl2br(esc_html($data['products'])) . '</div></div>' : '',
+        !empty($data['products']) ? '<div class="section"><div class="section-title">Products & Services</div><div class="section-content products-list">' . $data['products'] . '</div></div>' : '',
         !empty($data['listing_features']) ? '<div class="section"><div class="section-title">Where to Purchase</div><div class="section-content">' . esc_html($data['listing_features']) . '</div></div>' : '',
         !empty($data['certifications']) ? '<div class="section"><div class="section-title">Certifications</div><div>' . $this->format_certifications($data['certifications']) . '</div></div>' : '',
         !empty($data['growing_practices']) ? '<div class="section"><div class="section-title">Growing Practices</div><div class="section-content">' . nl2br(esc_html($data['growing_practices'])) . '</div></div>' : '',
@@ -531,7 +552,7 @@ class SimpleListingPDFGenerator {
     private function build_simple_html($data, $qr_code) {
         return sprintf('
         <style>
-            body { font-family: Arial, sans-serif; font-size: 12pt; }
+            body { font-family: helvetica, Arial, sans-serif; font-size: 12pt; }
             .header { background-color: #6AA338; color: white; padding: 15px; text-align: center; margin-bottom: 15px; }
             .header h1 { font-weight: bold; color: white; margin: 0; }
             .business-name { font-size: 18pt; font-weight: bold; margin-bottom: 10px; }
