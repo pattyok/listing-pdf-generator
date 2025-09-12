@@ -399,6 +399,9 @@ class SimpleListingPDFGenerator {
                 </div>',
                 esc_url($data['hero_image'])
             );
+        } else {
+            // Placeholder when no image
+            $hero_image_section = '<div style="text-align: center; margin: 8px 0; color: #999; font-style: italic;">No image available</div>';
         }
         
         return sprintf('
@@ -514,12 +517,12 @@ class SimpleListingPDFGenerator {
         
         %s
         
-        <table style="width: 100%%; border-collapse: collapse; margin: 15px 0;">
+        <table style="width: 100%%; border-collapse: collapse; margin: 15px 0; border: 1px solid #ddd;">
             <tr>
-                <td style="width: 50%%; vertical-align: top; padding-right: 10px;">
+                <td style="width: 50%%; vertical-align: top; padding: 10px; border-right: 1px solid #ddd; background-color: #f9f9f9;">
                     %s
                 </td>
-                <td style="width: 50%%; vertical-align: top; padding-left: 10px;">
+                <td style="width: 50%%; vertical-align: top; padding: 10px; background-color: #f5f5f5;">
                     %s
                 </td>
             </tr>
@@ -567,7 +570,7 @@ class SimpleListingPDFGenerator {
         esc_html($data['name']),
         '',
         $hero_image_section,
-        !empty($data['about']) ? '<div class="section-title">About Us</div><div class="section-content">' . nl2br(esc_html(wp_trim_words($data['about'], 100))) . '</div>' : '',
+        !empty($data['about']) ? '<div class="section-title">About Us</div><div class="section-content">' . nl2br(esc_html(wp_trim_words($data['about'], 100))) . '</div>' : '<div class="section-title">About Us</div><div class="section-content" style="color: #999; font-style: italic;">No information available</div>',
         !empty($data['location']) ? '<div class="contact-item"><span class="contact-label">Location:</span> ' . esc_html($data['location']) . '</div>' : '',
         !empty($data['email']) ? '<div class="contact-item"><span class="contact-label">Email:</span> ' . esc_html($data['email']) . '</div>' : '',
         !empty($data['phone']) ? '<div class="contact-item"><span class="contact-label">Phone:</span> ' . esc_html($data['phone']) . '</div>' : '',
