@@ -558,7 +558,6 @@ class SimpleListingPDFGenerator {
         !empty($data['about']) ? '<div class="section"><div class="section-title">About Us</div><div class="section-content">' . nl2br(esc_html(wp_trim_words($data['about'], 100))) . '</div></div>' : '',
         !empty($data['csa_info']) ? '<div class="section"><div class="section-title">CSA Info</div><div class="section-content">' . nl2br(esc_html($data['csa_info'])) . '</div></div>' : '',
         !empty($data['products']) ? '<div class="section"><div class="section-title">Products & Services</div><div class="section-content products-list">' . $data['products'] . '</div></div>' : '',
-        !empty($data['listing_features']) ? '<div class="section"><div class="section-title">Where to Purchase</div><div class="section-content">' . esc_html($data['listing_features']) . '</div></div>' : '',
         !empty($data['wholesale_info']) ? '<div class="section"><div class="section-title">Wholesale Info</div><div class="section-content">' . nl2br(esc_html($data['wholesale_info'])) . '</div></div>' : '',
         !empty($data['certifications']) ? '<div class="section"><div class="section-title">Certifications</div><div>' . $this->format_certifications($data['certifications']) . '</div></div>' : '',
         !empty($data['growing_practices']) ? '<div class="section"><div class="section-title">Growing Practices</div><div class="section-content">' . nl2br(esc_html($data['growing_practices'])) . '</div></div>' : '',
@@ -569,7 +568,7 @@ class SimpleListingPDFGenerator {
     }
     
     /**
-     * Format certifications as badges
+     * Format certifications as badges - filtered for Environmental Sustainability and Fair Labor only
      */
     private function format_certifications($certifications) {
         if (empty($certifications)) return '';
@@ -577,8 +576,24 @@ class SimpleListingPDFGenerator {
         $certs = explode(', ', $certifications);
         $badges = '';
         
+        // Filter for specific certification categories
+        $allowed_categories = array('environmental sustainability', 'fair labor');
+        
         foreach ($certs as $cert) {
-            $badges .= '<span class="certification-badge">' . esc_html(trim($cert)) . '</span> ';
+            $cert_lower = strtolower(trim($cert));
+            $include_cert = false;
+            
+            // Check if certification contains any of the allowed categories
+            foreach ($allowed_categories as $category) {
+                if (stripos($cert_lower, $category) !== false) {
+                    $include_cert = true;
+                    break;
+                }
+            }
+            
+            if ($include_cert) {
+                $badges .= '<span class="certification-badge">' . esc_html(trim($cert)) . '</span> ';
+            }
         }
         
         return $badges;
