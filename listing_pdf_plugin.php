@@ -221,25 +221,55 @@ class SimpleListingPDFGenerator {
         
         error_log("PDF Generation: Final wholesale_info result: " . (!empty($data['wholesale_info']) ? substr($data['wholesale_info'], 0, 200) . "... (length: " . strlen($data['wholesale_info']) . ")" : "EMPTY"));
         
-        // FINAL FIX: If no wholesale content found, try one more direct approach
+        // COMPREHENSIVE DEBUG: If still no wholesale, dump ALL field content to find it
         if (empty($data['wholesale_info'])) {
-            // Look for ANY content that contains the wholesale HTML structure you provided
+            error_log("PDF Generation: COMPREHENSIVE DEBUG - Examining all fields for wholesale content");
             foreach ($all_meta as $meta_key => $meta_value) {
                 if (!empty($meta_value[0]) && is_string($meta_value[0])) {
                     $content = $meta_value[0];
                     
-                    // Look for the exact structure: tabpanel-wholesale and products-available-for-wholesale
-                    if (stripos($content, 'tabpanel-wholesale') !== false && stripos($content, 'products-available-for-wholesale') !== false) {
-                        error_log("PDF Generation: Found wholesale structure in field: " . $meta_key);
+                    // Log any field that might contain wholesale info
+                    if (stripos($content, 'wholesale') !== false || 
+                        stripos($content, 'products available') !== false || 
+                        stripos($content, 'tabpanel') !== false ||
+                        strlen($content) > 500) { // Also log long content fields
                         
-                        // Extract everything after "Products available for wholesale"
-                        if (preg_match('/Products available for wholesale.*?<\/h3>\s*(.*?)(?=<\/div>|$)/is', $content, $matches)) {
-                            $wholesale_content = strip_tags($matches[1]);
-                            $wholesale_content = trim(preg_replace('/\s+/', ' ', $wholesale_content));
-                            
-                            if (!empty($wholesale_content)) {
-                                $data['wholesale_info'] = "Products available for wholesale: " . $wholesale_content;
-                                error_log("PDF Generation: SUCCESS - Extracted wholesale: " . substr($wholesale_content, 0, 100) . "...");
+                        error_log("PDF Generation: Field '{$meta_key}' contains potential wholesale data:");
+                        error_log("PDF Generation: Content preview: " . substr($content, 0, 300) . "...");
+                        
+                        // Try multiple extraction patterns
+                        $patterns = [
+                            '/Products available for wholesale.*?<\/h3>\s*(.*?)(?=<\/div>|<h[1-6]|$)/is',
+                            '/tabpanel-wholesale.*?<h2>Wholesale Info<\/h2>\s*(.*?)(?=<div class="listing-section"|$)/is',
+                            '/products-available-for-wholesale.*?<h3[^>]*>.*?<\/h3>\s*(.*?)(?=<\/div>|$)/is'
+                        ];
+                        
+                        foreach ($patterns as $pattern) {
+                            if (preg_match($pattern, $content, $matches)) {
+                                $wholesale_content = strip_tags($matches[1]);
+                                $wholesale_content = trim(preg_replace('/\s+/', ' ', $wholesale_content));
+                                
+                                if (!empty($wholesale_content) && strlen($wholesale_content) > 10) {
+                                    $data['wholesale_info'] = $wholesale_content;
+                                    error_log("PDF Generation: SUCCESS - Found wholesale in field '{$meta_key}': " . substr($wholesale_content, 0, 200) . "...");
+                                    break 2; // Break out of both loops
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Last resort: Just use any content that has "wholesale" in it
+            if (empty($data['wholesale_info'])) {
+                foreach ($all_meta as $meta_key => $meta_value) {
+                    if (!empty($meta_value[0]) && is_string($meta_value[0])) {
+                        $content = $meta_value[0];
+                        if (stripos($content, 'wholesale') !== false && !preg_match('/^field_[a-f0-9]+$/', $content)) {
+                            $clean_content = strip_tags($content);
+                            if (strlen($clean_content) > 20) {
+                                $data['wholesale_info'] = "Wholesale information: " . substr($clean_content, 0, 300);
+                                error_log("PDF Generation: LAST RESORT - Using content from field '{$meta_key}'");
                                 break;
                             }
                         }
@@ -744,7 +774,7 @@ class SimpleListingPDFGenerator {
                 </td>
                 <td style="width: 35%%; vertical-align: top;">
                     <div style="text-align: center; padding: 15px;">
-                        <div class="qr-title">Visit Online</div>
+                        <div class="qr-title">Scan for more details</div>
                         <img src="%s" style="width: 100px; height: 100px;" alt="QR Code">
                     </div>
                 </td>
@@ -850,7 +880,7 @@ class SimpleListingPDFGenerator {
         </div>
         
         <div class="qr-section">
-            <p><strong>Visit Online:</strong></p>
+            <p><strong>Scan for more details:</strong></p>
             <img src="%s" style="width: 100px; height: 100px;" alt="QR Code">
         </div>
         
