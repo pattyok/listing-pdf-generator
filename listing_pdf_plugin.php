@@ -517,13 +517,17 @@ class SimpleListingPDFGenerator {
         
         %s
         
-        <table style="width: 100%%; border-collapse: collapse; margin: 15px 0; border: 1px solid #ddd;">
+        <table style="width: 100%%; border-collapse: collapse; margin: 15px 0;">
             <tr>
-                <td style="width: 50%%; vertical-align: top; padding: 10px; border-right: 1px solid #ddd; background-color: #f9f9f9;">
-                    %s
+                <td style="width: 50%%; vertical-align: top; padding-right: 20px;">
+                    <div style="padding: 15px;">
+                        %s
+                    </div>
                 </td>
-                <td style="width: 50%%; vertical-align: top; padding: 10px; background-color: #f5f5f5;">
-                    %s
+                <td style="width: 50%%; vertical-align: top;">
+                    <div style="padding: 15px;">
+                        %s
+                    </div>
                 </td>
             </tr>
         </table>
