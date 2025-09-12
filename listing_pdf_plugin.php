@@ -162,6 +162,10 @@ class SimpleListingPDFGenerator {
             }
         }
         
+        // Debug: Log ALL post meta fields to find wholesale info
+        $all_meta = get_post_meta($post_id);
+        error_log("PDF Generation: All post meta fields for post {$post_id}: " . print_r(array_keys($all_meta), true));
+        
         // Debug: Try to find wholesale info with different field names
         $possible_wholesale_fields = array('wholesale_info', 'listing_wholesale_info', 'wholesale', 'wholesale_data', 'listing_wholesale');
         foreach ($possible_wholesale_fields as $field) {
@@ -170,6 +174,16 @@ class SimpleListingPDFGenerator {
                 error_log("PDF Generation: Found wholesale data in field '{$field}': " . substr($wholesale_value, 0, 100) . "...");
                 $data['wholesale_info'] = $wholesale_value;
                 break;
+            }
+        }
+        
+        // Look for any field containing 'wholesale' in the name
+        foreach ($all_meta as $meta_key => $meta_value) {
+            if (stripos($meta_key, 'wholesale') !== false && !empty($meta_value[0])) {
+                error_log("PDF Generation: Found wholesale-related field '{$meta_key}': " . substr($meta_value[0], 0, 100) . "...");
+                if (empty($data['wholesale_info'])) {
+                    $data['wholesale_info'] = $meta_value[0];
+                }
             }
         }
         
