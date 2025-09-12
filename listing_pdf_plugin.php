@@ -795,7 +795,7 @@ class SimpleListingPDFGenerator {
             <div class="website-url">%s</div>
             <div>Updated: %s</div>
             <div style="margin-top: 10px; font-size: 8pt;">
-                Generated from Eat Local First • Visit eatlocalfirst.org
+                Generated from Eat Local First • Visit %s
             </div>
         </div>',
         
@@ -816,7 +816,8 @@ class SimpleListingPDFGenerator {
         !empty($data['growing_practices']) ? '<div class="section"><div class="section-title">Growing Practices</div><div class="section-content">' . nl2br(esc_html($data['growing_practices'])) . '</div></div>' : '',
         !empty($data['retail_info']) ? '<div class="section"><div class="section-title">Retail Information</div><div class="section-content">' . nl2br(esc_html($data['retail_info'])) . '</div></div>' : '',
         esc_html($data['website'] ?: $data['url']),
-        esc_html($data['updated'])
+        esc_html($data['updated']),
+        esc_html($data['url'])
         );
     }
     
@@ -885,7 +886,7 @@ class SimpleListingPDFGenerator {
         </div>
         
         <div style="margin-top: 20px; font-size: 10pt; text-align: center;">
-            Generated from Eat Local First • Updated: %s
+            Generated from Eat Local First • Visit %s • Updated: %s
         </div>',
         
         esc_html($data['name']),
@@ -894,6 +895,7 @@ class SimpleListingPDFGenerator {
         esc_html($data['phone'] ?: 'Not specified'),
         esc_html($data['website'] ?: 'Not specified'),
         $qr_code,
+        esc_html($data['url']),
         esc_html($data['updated'])
         );
     }
