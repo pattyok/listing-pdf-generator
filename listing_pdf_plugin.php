@@ -534,6 +534,7 @@ class SimpleListingPDFGenerator {
         !empty($data['csa_info']) ? '<div class="section"><div class="section-title">CSA Info</div><div class="section-content">' . nl2br(esc_html($data['csa_info'])) . '</div></div>' : '',
         !empty($data['products']) ? '<div class="section"><div class="section-title">Products & Services</div><div class="section-content products-list">' . $data['products'] . '</div></div>' : '',
         !empty($data['listing_features']) ? '<div class="section"><div class="section-title">Where to Purchase</div><div class="section-content">' . esc_html($data['listing_features']) . '</div></div>' : '',
+        !empty($data['wholesale_info']) ? '<div class="section"><div class="section-title">Wholesale Info</div><div class="section-content">' . nl2br(esc_html($data['wholesale_info'])) . '</div></div>' : '',
         !empty($data['certifications']) ? '<div class="section"><div class="section-title">Certifications</div><div>' . $this->format_certifications($data['certifications']) . '</div></div>' : '',
         !empty($data['growing_practices']) ? '<div class="section"><div class="section-title">Growing Practices</div><div class="section-content">' . nl2br(esc_html($data['growing_practices'])) . '</div></div>' : '',
         !empty($data['retail_info']) ? '<div class="section"><div class="section-title">Retail Information</div><div class="section-content">' . nl2br(esc_html($data['retail_info'])) . '</div></div>' : '',
