@@ -221,10 +221,31 @@ class SimpleListingPDFGenerator {
         
         error_log("PDF Generation: Final wholesale_info result: " . (!empty($data['wholesale_info']) ? substr($data['wholesale_info'], 0, 200) . "... (length: " . strlen($data['wholesale_info']) . ")" : "EMPTY"));
         
-        // TEMPORARY TEST: Force wholesale content to see if rendering works
+        // FINAL FIX: If no wholesale content found, try one more direct approach
         if (empty($data['wholesale_info'])) {
-            $data['wholesale_info'] = "TEST WHOLESALE CONTENT: This is a test to verify wholesale section renders properly in the PDF. If you see this, the rendering works but data extraction is the issue.";
-            error_log("PDF Generation: TEMPORARY - Added test wholesale content");
+            // Look for ANY content that contains the wholesale HTML structure you provided
+            foreach ($all_meta as $meta_key => $meta_value) {
+                if (!empty($meta_value[0]) && is_string($meta_value[0])) {
+                    $content = $meta_value[0];
+                    
+                    // Look for the exact structure: tabpanel-wholesale and products-available-for-wholesale
+                    if (stripos($content, 'tabpanel-wholesale') !== false && stripos($content, 'products-available-for-wholesale') !== false) {
+                        error_log("PDF Generation: Found wholesale structure in field: " . $meta_key);
+                        
+                        // Extract everything after "Products available for wholesale"
+                        if (preg_match('/Products available for wholesale.*?<\/h3>\s*(.*?)(?=<\/div>|$)/is', $content, $matches)) {
+                            $wholesale_content = strip_tags($matches[1]);
+                            $wholesale_content = trim(preg_replace('/\s+/', ' ', $wholesale_content));
+                            
+                            if (!empty($wholesale_content)) {
+                                $data['wholesale_info'] = "Products available for wholesale: " . $wholesale_content;
+                                error_log("PDF Generation: SUCCESS - Extracted wholesale: " . substr($wholesale_content, 0, 100) . "...");
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
         }
         
         // Clean empty values
