@@ -514,6 +514,7 @@ class SimpleListingPDFGenerator {
         <style>
             body { font-family: Arial, sans-serif; font-size: 12pt; }
             .header { background-color: #004D43; color: white; padding: 15px; text-align: center; margin-bottom: 15px; }
+            .header h1 { font-weight: bold; color: white; margin: 0; }
             .business-name { font-size: 18pt; font-weight: bold; margin-bottom: 10px; }
             .contact { margin: 10px 0; }
             .qr-section { text-align: center; margin: 15px 0; }
