@@ -259,6 +259,11 @@ class SimpleListingPDFGenerator {
             return $this->filter_payment_methods($terms);
         }
         
+        // Special handling for products - filter out "Services"
+        if ($key === 'products') {
+            return $this->filter_products($terms);
+        }
+        
         // Regular taxonomy formatting
         $term_names = array();
         foreach ($terms as $term) {
@@ -286,6 +291,22 @@ class SimpleListingPDFGenerator {
         }
         
         return implode(', ', $payment_methods);
+    }
+    
+    /**
+     * Filter out "Services" category from products
+     */
+    private function filter_products($products) {
+        $filtered_products = array();
+        
+        foreach ($products as $product) {
+            // Skip any term that contains "Services" (case insensitive)
+            if (stripos($product->name, 'services') === false) {
+                $filtered_products[] = $product->name;
+            }
+        }
+        
+        return implode(', ', $filtered_products);
     }
     
     /**
@@ -377,9 +398,7 @@ class SimpleListingPDFGenerator {
             }
             
             .products-list {
-                background-color: #f0f8ff;
                 padding: 12px;
-                border: 1px solid #d6e9f0;
             }
             
             .certification-badge {
@@ -513,7 +532,7 @@ class SimpleListingPDFGenerator {
         return sprintf('
         <style>
             body { font-family: Arial, sans-serif; font-size: 12pt; }
-            .header { background-color: #004D43; color: white; padding: 15px; text-align: center; margin-bottom: 15px; }
+            .header { background-color: #6AA338; color: white; padding: 15px; text-align: center; margin-bottom: 15px; }
             .header h1 { font-weight: bold; color: white; margin: 0; }
             .business-name { font-size: 18pt; font-weight: bold; margin-bottom: 10px; }
             .contact { margin: 10px 0; }
