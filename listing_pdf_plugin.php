@@ -221,6 +221,12 @@ class SimpleListingPDFGenerator {
         
         error_log("PDF Generation: Final wholesale_info result: " . (!empty($data['wholesale_info']) ? substr($data['wholesale_info'], 0, 200) . "... (length: " . strlen($data['wholesale_info']) . ")" : "EMPTY"));
         
+        // TEMPORARY TEST: Force wholesale content to see if rendering works
+        if (empty($data['wholesale_info'])) {
+            $data['wholesale_info'] = "TEST WHOLESALE CONTENT: This is a test to verify wholesale section renders properly in the PDF. If you see this, the rendering works but data extraction is the issue.";
+            error_log("PDF Generation: TEMPORARY - Added test wholesale content");
+        }
+        
         // Clean empty values
         foreach ($data as $key => $value) {
             if (empty($value)) {
