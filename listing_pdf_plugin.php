@@ -162,74 +162,64 @@ class SimpleListingPDFGenerator {
             }
         }
         
-        // Debug: Log ALL post meta fields to find wholesale info
-        $all_meta = get_post_meta($post_id);
-        error_log("PDF Generation: All post meta fields for post {$post_id}: " . print_r(array_keys($all_meta), true));
+        // DIRECT DEBUG: Let's see EXACTLY what's in wholesale_info field
+        error_log("PDF Generation: DIRECT DEBUG - Checking wholesale_info field directly");
+        $wholesale_direct = get_post_meta($post_id, 'wholesale_info', true);
+        error_log("PDF Generation: wholesale_info field content: " . var_export($wholesale_direct, true));
         
-        // Initialize wholesale_info as empty - will be populated by comprehensive search
-        $data['wholesale_info'] = '';
-        
-        error_log("PDF Generation: Starting comprehensive wholesale content search...");
-        
-        // Method 1: Search post content first
-        $post_content = get_post_field('post_content', $post_id);
-        if (!empty($post_content)) {
-            error_log("PDF Generation: Checking post content for wholesale information...");
-            $extracted_content = $this->extract_wholesale_from_html($post_content);
-            if ($extracted_content) {
-                $data['wholesale_info'] = $extracted_content;
-                error_log("PDF Generation: SUCCESS - Found wholesale content in post_content: " . substr($extracted_content, 0, 200) . "...");
+        // If it's a field ID, let's get the actual field value
+        if (!empty($wholesale_direct) && preg_match('/^field_[a-f0-9]+$/', $wholesale_direct)) {
+            error_log("PDF Generation: wholesale_info contains field ID: " . $wholesale_direct);
+            // Try to get the actual field value using get_field()
+            if (function_exists('get_field')) {
+                $acf_wholesale = get_field('wholesale_info', $post_id);
+                error_log("PDF Generation: ACF get_field('wholesale_info') result: " . var_export($acf_wholesale, true));
+                $data['wholesale_info'] = $acf_wholesale ?: '';
+            } else {
+                error_log("PDF Generation: ACF get_field() not available");
+                $data['wholesale_info'] = '';
             }
+        } else {
+            $data['wholesale_info'] = $wholesale_direct ?: '';
         }
         
-        // Method 2: Search all meta fields for HTML content if not found yet
-        if (empty($data['wholesale_info'])) {
-            error_log("PDF Generation: Searching all meta fields for wholesale content...");
-            foreach ($all_meta as $meta_key => $meta_value) {
-                if (!empty($meta_value[0]) && is_string($meta_value[0])) {
-                    // Skip obvious field IDs
-                    if (preg_match('/^field_[a-f0-9]+$/', $meta_value[0])) {
-                        error_log("PDF Generation: Skipping ACF field ID: {$meta_key} = {$meta_value[0]}");
-                        continue;
-                    }
-                    
-                    // Look for substantial HTML content
-                    if (strlen($meta_value[0]) > 100 && 
-                        (stripos($meta_value[0], '<h3') !== false || stripos($meta_value[0], 'wholesale') !== false || stripos($meta_value[0], 'products available') !== false)) {
-                        
-                        error_log("PDF Generation: Checking field '{$meta_key}' for wholesale content...");
-                        $extracted_content = $this->extract_wholesale_from_html($meta_value[0]);
-                        if ($extracted_content) {
-                            $data['wholesale_info'] = $extracted_content;
-                            error_log("PDF Generation: SUCCESS - Found wholesale content in field '{$meta_key}': " . substr($extracted_content, 0, 200) . "...");
-                            break;
+        // If still empty or field ID, do a comprehensive search
+        if (empty($data['wholesale_info']) || preg_match('/^field_[a-f0-9]+$/', $data['wholesale_info'])) {
+            error_log("PDF Generation: No direct wholesale found, doing comprehensive search...");
+            
+            // Debug: Log ALL post meta fields
+            $all_meta = get_post_meta($post_id);
+            error_log("PDF Generation: All post meta fields: " . print_r(array_keys($all_meta), true));
+            
+            // Search post content
+            $post_content = get_post_field('post_content', $post_id);
+            if (!empty($post_content)) {
+                $extracted_content = $this->extract_wholesale_from_html($post_content);
+                if ($extracted_content) {
+                    $data['wholesale_info'] = $extracted_content;
+                    error_log("PDF Generation: Found wholesale in post_content");
+                }
+            }
+            
+            // Search all meta fields
+            if (empty($data['wholesale_info'])) {
+                foreach ($all_meta as $meta_key => $meta_value) {
+                    if (!empty($meta_value[0]) && is_string($meta_value[0]) && strlen($meta_value[0]) > 100) {
+                        if (stripos($meta_value[0], 'wholesale') !== false || stripos($meta_value[0], 'products available') !== false) {
+                            error_log("PDF Generation: Checking field '{$meta_key}' - contains wholesale keywords");
+                            $extracted_content = $this->extract_wholesale_from_html($meta_value[0]);
+                            if ($extracted_content) {
+                                $data['wholesale_info'] = $extracted_content;
+                                error_log("PDF Generation: Found wholesale content in field '{$meta_key}'");
+                                break;
+                            }
                         }
                     }
                 }
             }
         }
         
-        // Method 3: Try specific field names as final fallback
-        if (empty($data['wholesale_info'])) {
-            error_log("PDF Generation: Trying specific wholesale field names...");
-            $possible_wholesale_fields = array('wholesale_info', 'listing_wholesale_info', 'wholesale', 'wholesale_data', 'listing_wholesale', 'wholesale_products', 'products_wholesale');
-            foreach ($possible_wholesale_fields as $field) {
-                $wholesale_value = get_post_meta($post_id, $field, true);
-                if (!empty($wholesale_value) && !preg_match('/^field_[a-f0-9]+$/', $wholesale_value)) {
-                    error_log("PDF Generation: Found wholesale data in field '{$field}': " . substr($wholesale_value, 0, 100) . "...");
-                    $data['wholesale_info'] = $wholesale_value;
-                    break;
-                }
-            }
-        }
-        
-        // Final validation - ensure we don't have field IDs
-        if (!empty($data['wholesale_info']) && preg_match('/^field_[a-f0-9]+$/', $data['wholesale_info'])) {
-            error_log("PDF Generation: WARNING - Wholesale info contains field ID, clearing it: " . $data['wholesale_info']);
-            $data['wholesale_info'] = '';
-        }
-        
-        error_log("PDF Generation: Wholesale search complete. Result: " . (!empty($data['wholesale_info']) ? "FOUND (" . strlen($data['wholesale_info']) . " chars)" : "NOT FOUND"));
+        error_log("PDF Generation: Final wholesale_info result: " . (!empty($data['wholesale_info']) ? substr($data['wholesale_info'], 0, 200) . "... (length: " . strlen($data['wholesale_info']) . ")" : "EMPTY"));
         
         // Clean empty values
         foreach ($data as $key => $value) {
