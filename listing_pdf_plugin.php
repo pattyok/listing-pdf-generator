@@ -167,7 +167,7 @@ class SimpleListingPDFGenerator {
         error_log("PDF Generation: All post meta fields for post {$post_id}: " . print_r(array_keys($all_meta), true));
         
         // Debug: Try to find wholesale info with different field names
-        $possible_wholesale_fields = array('wholesale_info', 'listing_wholesale_info', 'wholesale', 'wholesale_data', 'listing_wholesale');
+        $possible_wholesale_fields = array('wholesale_info', 'listing_wholesale_info', 'wholesale', 'wholesale_data', 'listing_wholesale', 'wholesale_products', 'products_wholesale');
         foreach ($possible_wholesale_fields as $field) {
             $wholesale_value = get_post_meta($post_id, $field, true);
             if (!empty($wholesale_value)) {
@@ -177,10 +177,20 @@ class SimpleListingPDFGenerator {
             }
         }
         
-        // Look for any field containing 'wholesale' in the name
+        // Look for any field containing 'wholesale' or 'product' in the name
         foreach ($all_meta as $meta_key => $meta_value) {
-            if (stripos($meta_key, 'wholesale') !== false && !empty($meta_value[0])) {
-                error_log("PDF Generation: Found wholesale-related field '{$meta_key}': " . substr($meta_value[0], 0, 100) . "...");
+            if ((stripos($meta_key, 'wholesale') !== false || stripos($meta_key, 'product') !== false) && !empty($meta_value[0])) {
+                error_log("PDF Generation: Found wholesale/product-related field '{$meta_key}': " . substr($meta_value[0], 0, 100) . "...");
+                if (empty($data['wholesale_info'])) {
+                    $data['wholesale_info'] = $meta_value[0];
+                }
+            }
+        }
+        
+        // Look for fields that might contain "Products available for wholesale" content
+        foreach ($all_meta as $meta_key => $meta_value) {
+            if (!empty($meta_value[0]) && stripos($meta_value[0], 'products available') !== false) {
+                error_log("PDF Generation: Found field containing 'products available' text '{$meta_key}': " . substr($meta_value[0], 0, 200) . "...");
                 if (empty($data['wholesale_info'])) {
                     $data['wholesale_info'] = $meta_value[0];
                 }
