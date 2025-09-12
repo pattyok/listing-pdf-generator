@@ -307,7 +307,7 @@ class SimpleListingPDFGenerator {
                 
                 // Check if this looks like a subcategory (longer descriptive names)
                 // Common subcategory patterns: contains "Locally", "Raised", "Grown", "Harvested", etc.
-                $subcategory_keywords = array('locally', 'raised', 'harvested', 'grown', 'organic', 'certified', 'fresh');
+                $subcategory_keywords = array('locally', 'raised', 'harvested', 'grown', 'organic', 'certified', 'fresh', 'wholesale');
                 $is_subcategory = false;
                 
                 foreach ($subcategory_keywords as $keyword) {
@@ -325,9 +325,21 @@ class SimpleListingPDFGenerator {
             }
         }
         
-        // Combine subcategories and products
-        $result = array_merge($subcategories, $filtered_products);
-        return implode('<br>', $result);
+        // Format output: subcategories with line breaks, products with commas
+        $formatted_parts = array();
+        
+        // Add subcategories first (each on own line)
+        foreach ($subcategories as $subcategory) {
+            $formatted_parts[] = $subcategory;
+        }
+        
+        // Add products as comma-separated list if there are any
+        if (!empty($filtered_products)) {
+            $products_line = implode(', ', $filtered_products);
+            $formatted_parts[] = $products_line;
+        }
+        
+        return implode('<br>', $formatted_parts);
     }
     
     /**
