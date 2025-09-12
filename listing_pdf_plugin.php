@@ -43,7 +43,7 @@ class SimpleListingPDFGenerator {
             'certifications' => 'values_indicator', // taxonomy
             'growing_practices' => 'farms_fish_growing_methods',
             'retail_info' => 'listing_retail_info',
-            'wholesale_info' => 'wholesale_info',
+            'wholesale_info' => null, // Will be handled by custom extraction
             'csa_info' => 'listing_csa_info',
             'listing_features' => 'listing_features', // taxonomy
             'payment_methods' => 'listing_features', // taxonomy filtered
@@ -166,81 +166,70 @@ class SimpleListingPDFGenerator {
         $all_meta = get_post_meta($post_id);
         error_log("PDF Generation: All post meta fields for post {$post_id}: " . print_r(array_keys($all_meta), true));
         
-        // Debug: Try to find wholesale info with different field names
-        $possible_wholesale_fields = array('wholesale_info', 'listing_wholesale_info', 'wholesale', 'wholesale_data', 'listing_wholesale', 'wholesale_products', 'products_wholesale');
-        foreach ($possible_wholesale_fields as $field) {
-            $wholesale_value = get_post_meta($post_id, $field, true);
-            if (!empty($wholesale_value)) {
-                error_log("PDF Generation: Found wholesale data in field '{$field}': " . substr($wholesale_value, 0, 100) . "...");
-                $data['wholesale_info'] = $wholesale_value;
-                break;
+        // Initialize wholesale_info as empty - will be populated by comprehensive search
+        $data['wholesale_info'] = '';
+        
+        error_log("PDF Generation: Starting comprehensive wholesale content search...");
+        
+        // Method 1: Search post content first
+        $post_content = get_post_field('post_content', $post_id);
+        if (!empty($post_content)) {
+            error_log("PDF Generation: Checking post content for wholesale information...");
+            $extracted_content = $this->extract_wholesale_from_html($post_content);
+            if ($extracted_content) {
+                $data['wholesale_info'] = $extracted_content;
+                error_log("PDF Generation: SUCCESS - Found wholesale content in post_content: " . substr($extracted_content, 0, 200) . "...");
             }
         }
         
-        // Look for any field containing 'wholesale' or 'product' in the name
-        foreach ($all_meta as $meta_key => $meta_value) {
-            if ((stripos($meta_key, 'wholesale') !== false || stripos($meta_key, 'product') !== false) && !empty($meta_value[0])) {
-                error_log("PDF Generation: Found wholesale/product-related field '{$meta_key}': " . substr($meta_value[0], 0, 100) . "...");
-                if (empty($data['wholesale_info'])) {
-                    $data['wholesale_info'] = $meta_value[0];
-                }
-            }
-        }
-        
-        // Look for fields that might contain "Products available for wholesale" content
-        foreach ($all_meta as $meta_key => $meta_value) {
-            if (!empty($meta_value[0]) && stripos($meta_value[0], 'products available') !== false) {
-                error_log("PDF Generation: Found field containing 'products available' text '{$meta_key}': " . substr($meta_value[0], 0, 200) . "...");
-                
-                // Skip if this looks like a field ID (starts with 'field_')
-                if (strpos($meta_value[0], 'field_') === 0) {
-                    error_log("PDF Generation: Skipping field ID '{$meta_value[0]}' - looking for actual content");
-                    continue;
-                }
-                
-                // Extract content specifically from h3 "Products available for wholesale" section
-                $extracted_content = $this->extract_wholesale_from_html($meta_value[0]);
-                if ($extracted_content) {
-                    $data['wholesale_info'] = $extracted_content;
-                    error_log("PDF Generation: Extracted wholesale content: " . substr($extracted_content, 0, 200) . "...");
-                } else if (empty($data['wholesale_info'])) {
-                    $data['wholesale_info'] = $meta_value[0];
-                }
-            }
-        }
-        
-        // Enhanced ACF field search - look for the actual content field
-        if (empty($data['wholesale_info']) || strpos($data['wholesale_info'], 'field_') === 0) {
-            error_log("PDF Generation: Wholesale info empty or contains field ID, searching for ACF content fields");
-            
-            // Get the post content and check if it contains wholesale information
-            $post_content = get_post_field('post_content', $post_id);
-            if (!empty($post_content) && stripos($post_content, 'products available for wholesale') !== false) {
-                error_log("PDF Generation: Found wholesale content in post_content");
-                $extracted_content = $this->extract_wholesale_from_html($post_content);
-                if ($extracted_content) {
-                    $data['wholesale_info'] = $extracted_content;
-                }
-            }
-            
-            // Also try looking in any field that might contain HTML content about wholesale
+        // Method 2: Search all meta fields for HTML content if not found yet
+        if (empty($data['wholesale_info'])) {
+            error_log("PDF Generation: Searching all meta fields for wholesale content...");
             foreach ($all_meta as $meta_key => $meta_value) {
-                if (empty($data['wholesale_info']) || strpos($data['wholesale_info'], 'field_') === 0) {
-                    if (!empty($meta_value[0]) && 
-                        strlen($meta_value[0]) > 100 && // Likely to be content, not just a field ID
-                        !preg_match('/^field_[a-f0-9]+$/', $meta_value[0]) && // Not an ACF field ID
-                        (stripos($meta_value[0], 'wholesale') !== false || stripos($meta_value[0], '<h3') !== false)) {
+                if (!empty($meta_value[0]) && is_string($meta_value[0])) {
+                    // Skip obvious field IDs
+                    if (preg_match('/^field_[a-f0-9]+$/', $meta_value[0])) {
+                        error_log("PDF Generation: Skipping ACF field ID: {$meta_key} = {$meta_value[0]}");
+                        continue;
+                    }
+                    
+                    // Look for substantial HTML content
+                    if (strlen($meta_value[0]) > 100 && 
+                        (stripos($meta_value[0], '<h3') !== false || stripos($meta_value[0], 'wholesale') !== false || stripos($meta_value[0], 'products available') !== false)) {
                         
+                        error_log("PDF Generation: Checking field '{$meta_key}' for wholesale content...");
                         $extracted_content = $this->extract_wholesale_from_html($meta_value[0]);
                         if ($extracted_content) {
-                            error_log("PDF Generation: Found wholesale content in field '{$meta_key}'");
                             $data['wholesale_info'] = $extracted_content;
+                            error_log("PDF Generation: SUCCESS - Found wholesale content in field '{$meta_key}': " . substr($extracted_content, 0, 200) . "...");
                             break;
                         }
                     }
                 }
             }
         }
+        
+        // Method 3: Try specific field names as final fallback
+        if (empty($data['wholesale_info'])) {
+            error_log("PDF Generation: Trying specific wholesale field names...");
+            $possible_wholesale_fields = array('wholesale_info', 'listing_wholesale_info', 'wholesale', 'wholesale_data', 'listing_wholesale', 'wholesale_products', 'products_wholesale');
+            foreach ($possible_wholesale_fields as $field) {
+                $wholesale_value = get_post_meta($post_id, $field, true);
+                if (!empty($wholesale_value) && !preg_match('/^field_[a-f0-9]+$/', $wholesale_value)) {
+                    error_log("PDF Generation: Found wholesale data in field '{$field}': " . substr($wholesale_value, 0, 100) . "...");
+                    $data['wholesale_info'] = $wholesale_value;
+                    break;
+                }
+            }
+        }
+        
+        // Final validation - ensure we don't have field IDs
+        if (!empty($data['wholesale_info']) && preg_match('/^field_[a-f0-9]+$/', $data['wholesale_info'])) {
+            error_log("PDF Generation: WARNING - Wholesale info contains field ID, clearing it: " . $data['wholesale_info']);
+            $data['wholesale_info'] = '';
+        }
+        
+        error_log("PDF Generation: Wholesale search complete. Result: " . (!empty($data['wholesale_info']) ? "FOUND (" . strlen($data['wholesale_info']) . " chars)" : "NOT FOUND"));
         
         // Clean empty values
         foreach ($data as $key => $value) {
@@ -430,57 +419,144 @@ class SimpleListingPDFGenerator {
             return false;
         }
         
-        // Look for the specific h3 pattern: <h3 class="h-large">Products available for wholesale</h3>
-        $pattern = '/<h3[^>]*class="h-large"[^>]*>Products available for wholesale<\/h3>(.*?)(?=<h[1-6]|$)/is';
+        error_log("PDF Generation: Analyzing HTML content for wholesale information (length: " . strlen($html_content) . ")");
+        error_log("PDF Generation: HTML preview: " . substr($html_content, 0, 500) . "...");
         
-        if (preg_match($pattern, $html_content, $matches)) {
+        // Method 1: Look for the complete wholesale tabpanel section with ID
+        $pattern_tabpanel_id = '/<div[^>]*id="tabpanel-wholesale"[^>]*>(.*?)<\/div(?:\s[^>]*)?>(?:\s*<\/div>)*/is';
+        if (preg_match($pattern_tabpanel_id, $html_content, $matches)) {
+            $tabpanel_content = $matches[1];
+            error_log("PDF Generation: Found wholesale tabpanel section by ID");
+            
+            $content = $this->process_wholesale_tabpanel_content($tabpanel_content);
+            if ($content) {
+                return $content;
+            }
+        }
+        
+        // Method 2: Look for tabpanel with wholesale class
+        $pattern_tabpanel_class = '/<div[^>]*class="[^"]*tabpanel[^"]*wholesale[^"]*"[^>]*>(.*?)<\/div>/is';
+        if (preg_match($pattern_tabpanel_class, $html_content, $matches)) {
+            $tabpanel_content = $matches[1];
+            error_log("PDF Generation: Found wholesale tabpanel section by class");
+            
+            $content = $this->process_wholesale_tabpanel_content($tabpanel_content);
+            if ($content) {
+                return $content;
+            }
+        }
+        
+        // Method 3: Look for the specific div with "products-available-for-wholesale" class
+        $pattern_products_div = '/<div[^>]*class="[^"]*products-available-for-wholesale[^"]*"[^>]*>(.*?)<\/div>/is';
+        if (preg_match($pattern_products_div, $html_content, $matches)) {
+            $products_content = $matches[1];
+            error_log("PDF Generation: Found products-available-for-wholesale div");
+            
+            // Process the products content
+            $content = $this->clean_wholesale_content($products_content);
+            if (!empty($content)) {
+                error_log("PDF Generation: Successfully extracted wholesale content from products div");
+                return "Products available for wholesale:\n" . $content;
+            }
+        }
+        
+        // Method 4: Look for the specific h3 pattern: <h3 class="h-large">Products available for wholesale</h3>
+        $pattern_h3 = '/<h3[^>]*class="h-large"[^>]*>Products available for wholesale<\/h3>\s*(.*?)(?=<\/div>|<h[1-6]|$)/is';
+        if (preg_match($pattern_h3, $html_content, $matches)) {
             $content = $matches[1];
-            
-            // Clean up HTML - remove tags but keep basic structure
-            $content = strip_tags($content, '<p><br><ul><li><strong><b><em><i>');
-            
-            // Clean up excessive whitespace and newlines
-            $content = preg_replace('/\s+/', ' ', $content);
-            $content = trim($content);
+            $content = $this->clean_wholesale_content($content);
             
             if (!empty($content)) {
                 error_log("PDF Generation: Successfully extracted wholesale content from h3 section");
-                return $content;
+                return "Products available for wholesale:\n" . $content;
             }
         }
         
-        // Fallback: Look for the h3 without class restriction
-        $pattern_fallback = '/<h3[^>]*>Products available for wholesale<\/h3>(.*?)(?=<h[1-6]|$)/is';
+        // Method 5: General wholesale patterns
+        $general_patterns = array(
+            '/<h3[^>]*>Products available for wholesale<\/h3>\s*(.*?)(?=<h[1-6]|<\/div>|$)/is',
+            '/<h2[^>]*>Wholesale Info<\/h2>\s*(.*?)(?=<h[1-6]|<\/div>|$)/is',
+            '/<h3[^>]*>[^<]*wholesale[^<]*<\/h3>\s*(.*?)(?=<h[1-6]|<\/div>|$)/is'
+        );
         
-        if (preg_match($pattern_fallback, $html_content, $matches)) {
-            $content = $matches[1];
-            $content = strip_tags($content, '<p><br><ul><li><strong><b><em><i>');
-            $content = preg_replace('/\s+/', ' ', $content);
-            $content = trim($content);
-            
-            if (!empty($content)) {
-                error_log("PDF Generation: Successfully extracted wholesale content from h3 section (fallback pattern)");
-                return $content;
-            }
-        }
-        
-        // Second fallback: Look for any h3 containing "wholesale" followed by content
-        $pattern_loose = '/<h3[^>]*>[^<]*wholesale[^<]*<\/h3>(.*?)(?=<h[1-6]|$)/is';
-        
-        if (preg_match($pattern_loose, $html_content, $matches)) {
-            $content = $matches[1];
-            $content = strip_tags($content, '<p><br><ul><li><strong><b><em><i>');
-            $content = preg_replace('/\s+/', ' ', $content);
-            $content = trim($content);
-            
-            if (!empty($content)) {
-                error_log("PDF Generation: Successfully extracted wholesale content from loose h3 pattern");
-                return $content;
+        foreach ($general_patterns as $index => $pattern) {
+            if (preg_match($pattern, $html_content, $matches)) {
+                $content = $matches[1];
+                $content = $this->clean_wholesale_content($content);
+                
+                if (!empty($content)) {
+                    error_log("PDF Generation: Successfully extracted wholesale content from general pattern #" . ($index + 1));
+                    return $content;
+                }
             }
         }
         
         error_log("PDF Generation: Could not extract wholesale content from HTML section");
         return false;
+    }
+    
+    /**
+     * Process content from wholesale tabpanel
+     */
+    private function process_wholesale_tabpanel_content($tabpanel_content) {
+        $content = '';
+        
+        // Get content after the h2 title, before any listing-section divs
+        if (preg_match('/<h2[^>]*>Wholesale Info<\/h2>\s*(.*?)(?=<div[^>]*class="listing-section"|$)/is', $tabpanel_content, $main_matches)) {
+            $main_content = $this->clean_wholesale_content($main_matches[1]);
+            if (!empty($main_content)) {
+                $content .= $main_content;
+            }
+        }
+        
+        // Also get the "Products available for wholesale" section specifically
+        if (preg_match('/<div[^>]*class="[^"]*products-available-for-wholesale[^"]*"[^>]*>(.*?)<\/div>/is', $tabpanel_content, $products_matches)) {
+            $products_content = $products_matches[1];
+            // Remove the h3 title and get the content
+            $products_content = preg_replace('/<h3[^>]*>.*?<\/h3>/', '', $products_content);
+            $products_content = $this->clean_wholesale_content($products_content);
+            
+            if (!empty($products_content)) {
+                if (!empty($content)) {
+                    $content .= "\n\nProducts available for wholesale:\n" . $products_content;
+                } else {
+                    $content = "Products available for wholesale:\n" . $products_content;
+                }
+            }
+        }
+        
+        if (!empty($content)) {
+            error_log("PDF Generation: Successfully extracted wholesale content from tabpanel: " . substr($content, 0, 200) . "...");
+            return $content;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Clean wholesale content - remove HTML tags and normalize whitespace
+     */
+    private function clean_wholesale_content($content) {
+        if (empty($content)) {
+            return '';
+        }
+        
+        // Remove any remaining field IDs that might have slipped through
+        $content = preg_replace('/field_[a-f0-9]+/', '', $content);
+        
+        // Strip HTML tags but keep basic structure
+        $content = strip_tags($content, '<p><br><ul><li><strong><b><em><i><span>');
+        
+        // Normalize whitespace
+        $content = preg_replace('/\s+/', ' ', $content);
+        
+        // Remove empty paragraphs and clean up
+        $content = preg_replace('/<p[^>]*>\s*<\/p>/', '', $content);
+        $content = preg_replace('/(<br\s*\/?>\s*){3,}/', '<br><br>', $content);
+        
+        $content = trim($content);
+        
+        return $content;
     }
 
     /**
