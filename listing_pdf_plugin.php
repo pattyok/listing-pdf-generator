@@ -192,6 +192,12 @@ class SimpleListingPDFGenerator {
             if (!empty($meta_value[0]) && stripos($meta_value[0], 'products available') !== false) {
                 error_log("PDF Generation: Found field containing 'products available' text '{$meta_key}': " . substr($meta_value[0], 0, 200) . "...");
                 
+                // Skip if this looks like a field ID (starts with 'field_')
+                if (strpos($meta_value[0], 'field_') === 0) {
+                    error_log("PDF Generation: Skipping field ID '{$meta_value[0]}' - looking for actual content");
+                    continue;
+                }
+                
                 // Extract content specifically from h3 "Products available for wholesale" section
                 $extracted_content = $this->extract_wholesale_from_html($meta_value[0]);
                 if ($extracted_content) {
@@ -199,6 +205,39 @@ class SimpleListingPDFGenerator {
                     error_log("PDF Generation: Extracted wholesale content: " . substr($extracted_content, 0, 200) . "...");
                 } else if (empty($data['wholesale_info'])) {
                     $data['wholesale_info'] = $meta_value[0];
+                }
+            }
+        }
+        
+        // Enhanced ACF field search - look for the actual content field
+        if (empty($data['wholesale_info']) || strpos($data['wholesale_info'], 'field_') === 0) {
+            error_log("PDF Generation: Wholesale info empty or contains field ID, searching for ACF content fields");
+            
+            // Get the post content and check if it contains wholesale information
+            $post_content = get_post_field('post_content', $post_id);
+            if (!empty($post_content) && stripos($post_content, 'products available for wholesale') !== false) {
+                error_log("PDF Generation: Found wholesale content in post_content");
+                $extracted_content = $this->extract_wholesale_from_html($post_content);
+                if ($extracted_content) {
+                    $data['wholesale_info'] = $extracted_content;
+                }
+            }
+            
+            // Also try looking in any field that might contain HTML content about wholesale
+            foreach ($all_meta as $meta_key => $meta_value) {
+                if (empty($data['wholesale_info']) || strpos($data['wholesale_info'], 'field_') === 0) {
+                    if (!empty($meta_value[0]) && 
+                        strlen($meta_value[0]) > 100 && // Likely to be content, not just a field ID
+                        !preg_match('/^field_[a-f0-9]+$/', $meta_value[0]) && // Not an ACF field ID
+                        (stripos($meta_value[0], 'wholesale') !== false || stripos($meta_value[0], '<h3') !== false)) {
+                        
+                        $extracted_content = $this->extract_wholesale_from_html($meta_value[0]);
+                        if ($extracted_content) {
+                            error_log("PDF Generation: Found wholesale content in field '{$meta_key}'");
+                            $data['wholesale_info'] = $extracted_content;
+                            break;
+                        }
+                    }
                 }
             }
         }
@@ -649,7 +688,7 @@ class SimpleListingPDFGenerator {
         $qr_code,
         !empty($data['csa_info']) ? '<div class="section"><div class="section-title">CSA Info</div><div class="section-content">' . nl2br(esc_html($data['csa_info'])) . '</div></div>' : '',
         !empty($data['products']) ? '<div class="section"><div class="section-title">Products & Services</div><div class="section-content products-list">' . $data['products'] . '</div></div>' : '',
-        !empty($data['wholesale_info']) ? '<div class="section"><div class="section-title">Wholesale Info</div><div class="section-content">' . nl2br(esc_html($data['wholesale_info'])) . '</div></div>' : '',
+        (!empty($data['wholesale_info']) && !preg_match('/^field_[a-f0-9]+$/', $data['wholesale_info'])) ? '<div class="section"><div class="section-title">Wholesale Info</div><div class="section-content">' . nl2br(esc_html($data['wholesale_info'])) . '</div></div>' : '',
         !empty($data['certifications']) ? '<div class="section"><div class="section-title">Certifications</div><div>' . $this->format_certifications($data['certifications']) . '</div></div>' : '',
         !empty($data['growing_practices']) ? '<div class="section"><div class="section-title">Growing Practices</div><div class="section-content">' . nl2br(esc_html($data['growing_practices'])) . '</div></div>' : '',
         !empty($data['retail_info']) ? '<div class="section"><div class="section-title">Retail Information</div><div class="section-content">' . nl2br(esc_html($data['retail_info'])) . '</div></div>' : '',
