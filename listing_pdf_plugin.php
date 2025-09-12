@@ -450,7 +450,7 @@ class SimpleListingPDFGenerator {
             }
             
             .section {
-                margin: 8px 0;
+                margin: 0px 0;
             }
             
             .section-title {
