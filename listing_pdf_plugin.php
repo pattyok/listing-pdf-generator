@@ -440,7 +440,7 @@ class SimpleListingPDFGenerator {
             }
             
             .section {
-                margin: 20px 0;
+                margin: 8px 0;
             }
             
             .section-title {
@@ -548,7 +548,7 @@ class SimpleListingPDFGenerator {
         
         // Data substitutions
         esc_html($data['name']),
-        !empty($data['business_type']) ? '<div class="business-type">' . esc_html($data['business_type']) . '</div>' : '',
+        '',
         $hero_image_section,
         !empty($data['location']) ? '<div class="contact-item"><span class="contact-label">Location:</span> ' . esc_html($data['location']) . '</div>' : '',
         !empty($data['email']) ? '<div class="contact-item"><span class="contact-label">Email:</span> ' . esc_html($data['email']) . '</div>' : '',
