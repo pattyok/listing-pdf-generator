@@ -464,10 +464,7 @@ class SimpleListingPDFGenerator {
         <div class="footer">
             <div class="website-url">%s</div>
             <div>Updated: %s</div>
-            <div style="margin-top: 10px; font-size: 10pt; font-weight: bold; color: #6AA338;">
-                Fresh • Local • Sustainable
-            </div>
-            <div style="margin-top: 5px; font-size: 8pt;">
+            <div style="margin-top: 10px; font-size: 8pt;">
                 Generated from Eat Local First • Visit eatlocalfirst.org
             </div>
         </div>',
