@@ -191,7 +191,13 @@ class SimpleListingPDFGenerator {
         foreach ($all_meta as $meta_key => $meta_value) {
             if (!empty($meta_value[0]) && stripos($meta_value[0], 'products available') !== false) {
                 error_log("PDF Generation: Found field containing 'products available' text '{$meta_key}': " . substr($meta_value[0], 0, 200) . "...");
-                if (empty($data['wholesale_info'])) {
+                
+                // Extract content specifically from h3 "Products available for wholesale" section
+                $extracted_content = $this->extract_wholesale_from_html($meta_value[0]);
+                if ($extracted_content) {
+                    $data['wholesale_info'] = $extracted_content;
+                    error_log("PDF Generation: Extracted wholesale content: " . substr($extracted_content, 0, 200) . "...");
+                } else if (empty($data['wholesale_info'])) {
                     $data['wholesale_info'] = $meta_value[0];
                 }
             }
@@ -377,6 +383,67 @@ class SimpleListingPDFGenerator {
         return implode('<br>', $formatted_parts);
     }
     
+    /**
+     * Extract wholesale content from HTML under "Products available for wholesale" h3
+     */
+    private function extract_wholesale_from_html($html_content) {
+        if (empty($html_content)) {
+            return false;
+        }
+        
+        // Look for the specific h3 pattern: <h3 class="h-large">Products available for wholesale</h3>
+        $pattern = '/<h3[^>]*class="h-large"[^>]*>Products available for wholesale<\/h3>(.*?)(?=<h[1-6]|$)/is';
+        
+        if (preg_match($pattern, $html_content, $matches)) {
+            $content = $matches[1];
+            
+            // Clean up HTML - remove tags but keep basic structure
+            $content = strip_tags($content, '<p><br><ul><li><strong><b><em><i>');
+            
+            // Clean up excessive whitespace and newlines
+            $content = preg_replace('/\s+/', ' ', $content);
+            $content = trim($content);
+            
+            if (!empty($content)) {
+                error_log("PDF Generation: Successfully extracted wholesale content from h3 section");
+                return $content;
+            }
+        }
+        
+        // Fallback: Look for the h3 without class restriction
+        $pattern_fallback = '/<h3[^>]*>Products available for wholesale<\/h3>(.*?)(?=<h[1-6]|$)/is';
+        
+        if (preg_match($pattern_fallback, $html_content, $matches)) {
+            $content = $matches[1];
+            $content = strip_tags($content, '<p><br><ul><li><strong><b><em><i>');
+            $content = preg_replace('/\s+/', ' ', $content);
+            $content = trim($content);
+            
+            if (!empty($content)) {
+                error_log("PDF Generation: Successfully extracted wholesale content from h3 section (fallback pattern)");
+                return $content;
+            }
+        }
+        
+        // Second fallback: Look for any h3 containing "wholesale" followed by content
+        $pattern_loose = '/<h3[^>]*>[^<]*wholesale[^<]*<\/h3>(.*?)(?=<h[1-6]|$)/is';
+        
+        if (preg_match($pattern_loose, $html_content, $matches)) {
+            $content = $matches[1];
+            $content = strip_tags($content, '<p><br><ul><li><strong><b><em><i>');
+            $content = preg_replace('/\s+/', ' ', $content);
+            $content = trim($content);
+            
+            if (!empty($content)) {
+                error_log("PDF Generation: Successfully extracted wholesale content from loose h3 pattern");
+                return $content;
+            }
+        }
+        
+        error_log("PDF Generation: Could not extract wholesale content from HTML section");
+        return false;
+    }
+
     /**
      * Generate QR code with simple fallback
      */
