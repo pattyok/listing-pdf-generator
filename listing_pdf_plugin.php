@@ -514,7 +514,16 @@ class SimpleListingPDFGenerator {
         
         %s
         
-        %s
+        <table style="width: 100%%; border-collapse: collapse; margin: 15px 0;">
+            <tr>
+                <td style="width: 50%%; vertical-align: top; padding-right: 10px;">
+                    %s
+                </td>
+                <td style="width: 50%%; vertical-align: top; padding-left: 10px;">
+                    %s
+                </td>
+            </tr>
+        </table>
         
         <table style="width: 100%%; border-collapse: collapse; margin: 15px 0;">
             <tr>
@@ -546,8 +555,6 @@ class SimpleListingPDFGenerator {
         
         %s
         
-        %s
-        
         <div class="footer">
             <div class="website-url">%s</div>
             <div>Updated: %s</div>
@@ -560,12 +567,12 @@ class SimpleListingPDFGenerator {
         esc_html($data['name']),
         '',
         $hero_image_section,
+        !empty($data['about']) ? '<div class="section"><div class="section-title">About Us</div><div class="section-content">' . nl2br(esc_html(wp_trim_words($data['about'], 100))) . '</div></div>' : '',
         !empty($data['location']) ? '<div class="contact-item"><span class="contact-label">Location:</span> ' . esc_html($data['location']) . '</div>' : '',
         !empty($data['email']) ? '<div class="contact-item"><span class="contact-label">Email:</span> ' . esc_html($data['email']) . '</div>' : '',
         !empty($data['phone']) ? '<div class="contact-item"><span class="contact-label">Phone:</span> ' . esc_html($data['phone']) . '</div>' : '',
         !empty($data['website']) ? '<div class="contact-item"><span class="contact-label">Website:</span> ' . esc_html($data['website']) . '</div>' : '',
         $qr_code,
-        !empty($data['about']) ? '<div class="section"><div class="section-title">About Us</div><div class="section-content">' . nl2br(esc_html(wp_trim_words($data['about'], 100))) . '</div></div>' : '',
         !empty($data['csa_info']) ? '<div class="section"><div class="section-title">CSA Info</div><div class="section-content">' . nl2br(esc_html($data['csa_info'])) . '</div></div>' : '',
         !empty($data['products']) ? '<div class="section"><div class="section-title">Products & Services</div><div class="section-content products-list">' . $data['products'] . '</div></div>' : '',
         !empty($data['wholesale_info']) ? '<div class="section"><div class="section-title">Wholesale Info</div><div class="section-content">' . nl2br(esc_html($data['wholesale_info'])) . '</div></div>' : '',
