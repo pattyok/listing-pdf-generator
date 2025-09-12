@@ -43,7 +43,7 @@ class SimpleListingPDFGenerator {
             'certifications' => 'values_indicator', // taxonomy
             'growing_practices' => 'farms_fish_growing_methods',
             'retail_info' => 'listing_retail_info',
-            'wholesale_info' => 'listing_wholesale_info',
+            'wholesale_info' => 'wholesale_info',
             'csa_info' => 'listing_csa_info',
             'listing_features' => 'listing_features', // taxonomy
             'payment_methods' => 'listing_features', // taxonomy filtered
@@ -159,6 +159,17 @@ class SimpleListingPDFGenerator {
                 $data[$key] = $this->get_taxonomy_data($post_id, $field_name, $key);
             } else {
                 $data[$key] = get_post_meta($post_id, $field_name, true);
+            }
+        }
+        
+        // Debug: Try to find wholesale info with different field names
+        $possible_wholesale_fields = array('wholesale_info', 'listing_wholesale_info', 'wholesale', 'wholesale_data', 'listing_wholesale');
+        foreach ($possible_wholesale_fields as $field) {
+            $wholesale_value = get_post_meta($post_id, $field, true);
+            if (!empty($wholesale_value)) {
+                error_log("PDF Generation: Found wholesale data in field '{$field}': " . substr($wholesale_value, 0, 100) . "...");
+                $data['wholesale_info'] = $wholesale_value;
+                break;
             }
         }
         
