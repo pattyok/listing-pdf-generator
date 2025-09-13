@@ -569,7 +569,7 @@ class SimpleListingPDFGenerator {
         error_log(print_r($data, true));
         
         // Content section with image and text side by side
-        $about_content = !empty($data['about']) ? nl2br(esc_html(wp_trim_words($data['about'], 150))) : '<span style="color: #999; font-style: italic;">No information available</span>';
+        $about_content = !empty($data['about']) ? nl2br(esc_html(wp_trim_words($data['about'], 80))) : '<span style="color: #999; font-style: italic;">No information available</span>';
 
         if ($data['hero_image']) {
             $content_section = sprintf('
@@ -580,8 +580,8 @@ class SimpleListingPDFGenerator {
                         <td style="width: 150px; vertical-align: top; padding-right: 15px;">
                             <img src="%s" width="140" height="105" style="border: 1px solid #ddd;" alt="Business Photo">
                         </td>
-                        <td style="vertical-align: top;">
-                            <div class="section-content" style="text-align: justify; line-height: 1.5;">
+                        <td style="vertical-align: top; height: 105px; overflow: hidden;">
+                            <div class="section-content" style="text-align: justify; line-height: 1.4; max-height: 105px; overflow: hidden;">
                                 %s
                             </div>
                         </td>
