@@ -593,11 +593,12 @@ class SimpleListingPDFGenerator {
             .business-name {
                 font-size: 20pt;
                 font-weight: bold;
-                color: #004D43;
+                color: white;
+                background-color: #004D43;
                 margin-bottom: 10px;
                 text-align: center;
-                border-bottom: 3px solid #6AA338;
-                padding-bottom: 8px;
+                padding: 15px 8px;
+                border-radius: 5px;
             }
             
             .business-type {
