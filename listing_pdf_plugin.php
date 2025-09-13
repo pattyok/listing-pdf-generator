@@ -280,38 +280,6 @@ class SimpleListingPDFGenerator {
         return false;
     }
     
-    /**
-     * Capture screenshot of map from listing page
-     */
-    private function capture_map_screenshot($listing_url, $post_id = null) {
-        // Skip screenshot services entirely - they're unreliable for dynamic content
-        // Just create a useful location placeholder instead
-        return $this->create_location_placeholder($post_id);
-    }
-    
-    /**
-     * Create simple location placeholder when maps fail
-     */
-    private function create_location_placeholder($post_id) {
-        if (!$post_id) return false;
-        
-        // Get address for placeholder
-        $address = get_post_meta($post_id, 'location_address', true);
-        if (empty($address)) {
-            $address = get_post_meta($post_id, 'listing_location', true);
-        }
-        
-        if (empty($address)) {
-            return false; // Don't show location section if no address
-        }
-        
-        // Create a more detailed location box instead of trying to screenshot
-        $clean_address = wp_trim_words($address, 10);
-        
-        // Use a service that creates a text-based "map" image
-        $map_text = urlencode("📍\n" . $clean_address . "\n\nView Interactive Map\nOnline");
-        return 'https://via.placeholder.com/300x200/e8f5e8/004D43?text=' . $map_text;
-    }
     
     /**
      * Verify image is accessible
@@ -598,47 +566,17 @@ class SimpleListingPDFGenerator {
     private function build_html($data, $qr_code) {
         error_log(print_r($data, true));
         
-        // Content section with image and map side by side
+        // Content section with just business image (no map)
         $content_section = '';
-        
-        // Build image and map side by side
-        if ($data['hero_image'] || !empty($data['url'])) {
-            $content_section = '<table style="width: 100%; border-collapse: collapse;"><tr>';
-            
-            // Business image column
-            if ($data['hero_image']) {
-                $content_section .= '
-                <td style="width: 50%; text-align: center; padding-right: 10px; vertical-align: top;">
-                    <div style="margin-bottom: 5px; font-weight: bold; color: #004D43; font-size: 10pt;">Photo</div>
-                    <img src="' . esc_url($data['hero_image']) . '" width="140" height="100" style="border: 1px solid #ddd;" alt="Business Photo">
-                </td>';
-            }
-            
-            // Map screenshot column
-            $map_screenshot_url = $this->capture_map_screenshot($data['url'], $data['post_id']);
-            if ($map_screenshot_url) {
-                $width = $data['hero_image'] ? '50%' : '100%';
-                $content_section .= '
-                <td style="width: ' . $width . '; text-align: center; padding-left: 10px; vertical-align: top;">
-                    <div style="margin-bottom: 5px; font-weight: bold; color: #004D43; font-size: 10pt;">Location Map</div>
-                    <img src="' . esc_url($map_screenshot_url) . '" width="140" height="100" style="border: 1px solid #ddd;" alt="Location Map">
-                </td>';
-            } else {
-                // Fallback: Show address text if screenshot fails
-                $address = $data['address'] ?: $data['location'];
-                if ($address) {
-                    $width = $data['hero_image'] ? '50%' : '100%';
-                    $content_section .= '
-                    <td style="width: ' . $width . '; text-align: center; padding-left: 10px; vertical-align: top;">
-                        <div style="margin-bottom: 5px; font-weight: bold; color: #004D43; font-size: 10pt;">Location</div>
-                        <div style="border: 1px solid #ddd; width: 140px; height: 100px; line-height: 100px; background: #f5f5f5; color: #666; font-size: 10pt; margin: 0 auto;">📍 ' . esc_html(wp_trim_words($address, 8)) . '</div>
-                    </td>';
-                }
-            }
-            
-            $content_section .= '</tr></table>';
+
+        if ($data['hero_image']) {
+            $content_section = '
+            <div style="text-align: center; margin: 8px 0;">
+                <div style="margin-bottom: 5px; font-weight: bold; color: #004D43; font-size: 10pt;">Photo</div>
+                <img src="' . esc_url($data['hero_image']) . '" width="200" height="140" style="border: 1px solid #ddd;" alt="Business Photo">
+            </div>';
         } else {
-            $content_section = '<div style="text-align: center; margin: 8px 0; color: #999; font-style: italic; height: 100px; line-height: 100px;">No image or location available</div>';
+            $content_section = '<div style="text-align: center; margin: 8px 0; color: #999; font-style: italic; height: 50px; line-height: 50px;">No image available</div>';
         }
         
         return sprintf('
