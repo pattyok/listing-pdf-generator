@@ -281,6 +281,41 @@ class SimpleListingPDFGenerator {
     }
     
     /**
+     * Capture screenshot of map from listing page
+     */
+    private function capture_map_screenshot($listing_url) {
+        if (empty($listing_url)) return false;
+        
+        try {
+            // Simple screenshot service that works reliably
+            $screenshot_url = 'https://image.thum.io/get/width/300/crop/200/noanimate/' . urlencode($listing_url);
+            
+            // Test if the service responds
+            $response = wp_remote_head($screenshot_url, ['timeout' => 10]);
+            if (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200) {
+                error_log('PDF Generation: Map screenshot generated: ' . $screenshot_url);
+                return $screenshot_url;
+            }
+            
+            // Fallback to Google Maps static API if we have address
+            $address = get_post_meta(get_the_ID(), 'location_address', true);
+            if (!empty($address)) {
+                $maps_url = 'https://maps.googleapis.com/maps/api/staticmap?size=300x200&zoom=15&markers=' . urlencode($address) . '&key=YOUR_API_KEY';
+                // Note: Replace YOUR_API_KEY with actual Google Maps API key
+                error_log('PDF Generation: Fallback to Google Maps static: ' . $maps_url);
+                return $maps_url;
+            }
+            
+            error_log('PDF Generation: Map screenshot failed for URL: ' . $listing_url);
+            return false;
+            
+        } catch (Exception $e) {
+            error_log('PDF Generation: Screenshot error: ' . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
      * Verify image is accessible
      */
     private function verify_image_accessible($image_url) {
@@ -565,17 +600,47 @@ class SimpleListingPDFGenerator {
     private function build_html($data, $qr_code) {
         error_log(print_r($data, true));
         
-        // Hero image section
-        $hero_image_section = '';
-        if ($data['hero_image']) {
-            $hero_image_section = sprintf(
-                '<div style="text-align: center; margin: 8px 0;">
-                    <img src="%s" width="150" height="100" style="border: 1px solid #ddd; border-radius: 5px;" alt="Business Image">
-                </div>',
-                esc_url($data['hero_image'])
-            );
+        // Content section with image and map side by side
+        $content_section = '';
+        
+        // Build image and map side by side
+        if ($data['hero_image'] || !empty($data['url'])) {
+            $content_section = '<table style="width: 100%; border-collapse: collapse;"><tr>';
+            
+            // Business image column
+            if ($data['hero_image']) {
+                $content_section .= '
+                <td style="width: 50%; text-align: center; padding-right: 10px; vertical-align: top;">
+                    <div style="margin-bottom: 5px; font-weight: bold; color: #004D43; font-size: 10pt;">Photo</div>
+                    <img src="' . esc_url($data['hero_image']) . '" width="140" height="100" style="border: 1px solid #ddd;" alt="Business Photo">
+                </td>';
+            }
+            
+            // Map screenshot column
+            $map_screenshot_url = $this->capture_map_screenshot($data['url']);
+            if ($map_screenshot_url) {
+                $width = $data['hero_image'] ? '50%' : '100%';
+                $content_section .= '
+                <td style="width: ' . $width . '; text-align: center; padding-left: 10px; vertical-align: top;">
+                    <div style="margin-bottom: 5px; font-weight: bold; color: #004D43; font-size: 10pt;">Location Map</div>
+                    <img src="' . esc_url($map_screenshot_url) . '" width="140" height="100" style="border: 1px solid #ddd;" alt="Location Map">
+                </td>';
+            } else {
+                // Fallback: Show address text if screenshot fails
+                $address = $data['address'] ?: $data['location'];
+                if ($address) {
+                    $width = $data['hero_image'] ? '50%' : '100%';
+                    $content_section .= '
+                    <td style="width: ' . $width . '; text-align: center; padding-left: 10px; vertical-align: top;">
+                        <div style="margin-bottom: 5px; font-weight: bold; color: #004D43; font-size: 10pt;">Location</div>
+                        <div style="border: 1px solid #ddd; width: 140px; height: 100px; line-height: 100px; background: #f5f5f5; color: #666; font-size: 10pt; margin: 0 auto;">📍 ' . esc_html(wp_trim_words($address, 8)) . '</div>
+                    </td>';
+                }
+            }
+            
+            $content_section .= '</tr></table>';
         } else {
-            $hero_image_section = '<div style="text-align: center; margin: 8px 0; color: #999; font-style: italic; height: 100px; line-height: 100px;">No image available</div>';
+            $content_section = '<div style="text-align: center; margin: 8px 0; color: #999; font-style: italic; height: 100px; line-height: 100px;">No image or location available</div>';
         }
         
         return sprintf('
@@ -692,12 +757,11 @@ class SimpleListingPDFGenerator {
         
         %s
         
+        %s
+        
         <table style="width: 100%%; border-collapse: collapse; margin: 15px 0;">
             <tr>
-                <td style="width: 35%%; vertical-align: top; padding-right: 15px;">
-                    %s
-                </td>
-                <td style="width: 65%%; vertical-align: top;">
+                <td style="width: 100%%; vertical-align: top;">
                     <div class="section-title">About Us</div>
                     <div class="section-content" style="text-align: justify; line-height: 1.5;">
                         %s
@@ -747,7 +811,7 @@ class SimpleListingPDFGenerator {
         // Data substitutions
         esc_html($data['name']),
         '',
-        $hero_image_section,
+        $content_section,
         !empty($data['about']) ? nl2br(esc_html(wp_trim_words($data['about'], 150))) : '<span style="color: #999; font-style: italic;">No information available</span>',
         !empty($data['location']) ? '<div class="contact-item"><span class="contact-label">Location:</span> ' . esc_html($data['location']) . '</div>' : '',
         !empty($data['email']) ? '<div class="contact-item"><span class="contact-label">Email:</span> ' . esc_html($data['email']) . '</div>' : '',
