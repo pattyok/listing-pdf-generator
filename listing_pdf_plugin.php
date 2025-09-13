@@ -221,62 +221,8 @@ class SimpleListingPDFGenerator {
         
         error_log("PDF Generation: Final wholesale_info result: " . (!empty($data['wholesale_info']) ? substr($data['wholesale_info'], 0, 200) . "... (length: " . strlen($data['wholesale_info']) . ")" : "EMPTY"));
         
-        // COMPREHENSIVE DEBUG: If still no wholesale, dump ALL field content to find it
-        if (empty($data['wholesale_info'])) {
-            error_log("PDF Generation: COMPREHENSIVE DEBUG - Examining all fields for wholesale content");
-            foreach ($all_meta as $meta_key => $meta_value) {
-                if (!empty($meta_value[0]) && is_string($meta_value[0])) {
-                    $content = $meta_value[0];
-                    
-                    // Log any field that might contain wholesale info
-                    if (stripos($content, 'wholesale') !== false || 
-                        stripos($content, 'products available') !== false || 
-                        stripos($content, 'tabpanel') !== false ||
-                        strlen($content) > 500) { // Also log long content fields
-                        
-                        error_log("PDF Generation: Field '{$meta_key}' contains potential wholesale data:");
-                        error_log("PDF Generation: Content preview: " . substr($content, 0, 300) . "...");
-                        
-                        // Try multiple extraction patterns
-                        $patterns = [
-                            '/Products available for wholesale.*?<\/h3>\s*(.*?)(?=<\/div>|<h[1-6]|$)/is',
-                            '/tabpanel-wholesale.*?<h2>Wholesale Info<\/h2>\s*(.*?)(?=<div class="listing-section"|$)/is',
-                            '/products-available-for-wholesale.*?<h3[^>]*>.*?<\/h3>\s*(.*?)(?=<\/div>|$)/is'
-                        ];
-                        
-                        foreach ($patterns as $pattern) {
-                            if (preg_match($pattern, $content, $matches)) {
-                                $wholesale_content = strip_tags($matches[1]);
-                                $wholesale_content = trim(preg_replace('/\s+/', ' ', $wholesale_content));
-                                
-                                if (!empty($wholesale_content) && strlen($wholesale_content) > 10) {
-                                    $data['wholesale_info'] = $wholesale_content;
-                                    error_log("PDF Generation: SUCCESS - Found wholesale in field '{$meta_key}': " . substr($wholesale_content, 0, 200) . "...");
-                                    break 2; // Break out of both loops
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            
-            // Last resort: Just use any content that has "wholesale" in it
-            if (empty($data['wholesale_info'])) {
-                foreach ($all_meta as $meta_key => $meta_value) {
-                    if (!empty($meta_value[0]) && is_string($meta_value[0])) {
-                        $content = $meta_value[0];
-                        if (stripos($content, 'wholesale') !== false && !preg_match('/^field_[a-f0-9]+$/', $content)) {
-                            $clean_content = strip_tags($content);
-                            if (strlen($clean_content) > 20) {
-                                $data['wholesale_info'] = "Wholesale information: " . substr($clean_content, 0, 300);
-                                error_log("PDF Generation: LAST RESORT - Using content from field '{$meta_key}'");
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        // Wholesale info is now handled with a static message in the template
+        $data['wholesale_info'] = 'static'; // Just a placeholder since we use static text
         
         // Clean empty values
         foreach ($data as $key => $value) {
@@ -811,7 +757,7 @@ class SimpleListingPDFGenerator {
         $qr_code,
         !empty($data['csa_info']) ? '<div class="section"><div class="section-title">CSA Info</div><div class="section-content">' . nl2br(esc_html($data['csa_info'])) . '</div></div>' : '',
         !empty($data['products']) ? '<div class="section"><div class="section-title">Products & Services</div><div class="section-content products-list">' . $data['products'] . '</div></div>' : '',
-        (!empty($data['wholesale_info']) && !preg_match('/^field_[a-f0-9]+$/', $data['wholesale_info'])) ? '<div class="section"><div class="section-title">Wholesale Info</div><div class="section-content">' . nl2br(esc_html($data['wholesale_info'])) . '</div></div>' : '',
+        '<div class="section"><div class="section-title">Wholesale</div><div class="section-content">Contact us for wholesale products or scan the QR code for more details.</div></div>',
         !empty($data['certifications']) ? '<div class="section"><div class="section-title">Certifications</div><div>' . $this->format_certifications($data['certifications']) . '</div></div>' : '',
         !empty($data['growing_practices']) ? '<div class="section"><div class="section-title">Growing Practices</div><div class="section-content">' . nl2br(esc_html($data['growing_practices'])) . '</div></div>' : '',
         !empty($data['retail_info']) ? '<div class="section"><div class="section-title">Retail Information</div><div class="section-content">' . nl2br(esc_html($data['retail_info'])) . '</div></div>' : '',
