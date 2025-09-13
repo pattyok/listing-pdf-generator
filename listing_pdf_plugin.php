@@ -568,25 +568,19 @@ class SimpleListingPDFGenerator {
     private function build_html($data, $qr_code) {
         error_log(print_r($data, true));
         
-        // Content section with image and text side by side
-        $about_content = !empty($data['about']) ? nl2br(esc_html(wp_trim_words($data['about'], 80))) : '<span style="color: #999; font-style: italic;">No information available</span>';
+        // Content section with stacked layout
+        $about_content = !empty($data['about']) ? nl2br(esc_html(wp_trim_words($data['about'], 120))) : '<span style="color: #999; font-style: italic;">No information available</span>';
 
         if ($data['hero_image']) {
             $content_section = sprintf('
             <div style="margin: 15px 0;">
                 <div class="section-title">About Us</div>
-                <table style="width: 100%%; border-collapse: collapse; table-layout: fixed;">
-                    <tr>
-                        <td style="width: 150px; vertical-align: top; padding-right: 15px;">
-                            <img src="%s" width="140" height="105" style="border: 1px solid #ddd;" alt="Business Photo">
-                        </td>
-                        <td style="vertical-align: top; height: 105px; overflow: hidden; width: calc(100%% - 150px);">
-                            <div class="section-content" style="text-align: justify; line-height: 1.4; max-height: 105px; overflow: hidden;">
-                                %s
-                            </div>
-                        </td>
-                    </tr>
-                </table>
+                <div style="text-align: center; margin-bottom: 15px;">
+                    <img src="%s" width="200" height="150" style="border: 1px solid #ddd;" alt="Business Photo">
+                </div>
+                <div class="section-content" style="text-align: justify; line-height: 1.5;">
+                    %s
+                </div>
             </div>', 
             esc_url($data['hero_image']), 
             $about_content);
