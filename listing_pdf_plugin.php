@@ -575,12 +575,12 @@ class SimpleListingPDFGenerator {
             $content_section = sprintf('
             <div style="margin: 15px 0;">
                 <div class="section-title">About Us</div>
-                <table style="width: 100%%; border-collapse: collapse;">
+                <table style="width: 100%%; border-collapse: collapse; table-layout: fixed;">
                     <tr>
                         <td style="width: 150px; vertical-align: top; padding-right: 15px;">
                             <img src="%s" width="140" height="105" style="border: 1px solid #ddd;" alt="Business Photo">
                         </td>
-                        <td style="vertical-align: top; height: 105px; overflow: hidden;">
+                        <td style="vertical-align: top; height: 105px; overflow: hidden; width: calc(100%% - 150px);">
                             <div class="section-content" style="text-align: justify; line-height: 1.4; max-height: 105px; overflow: hidden;">
                                 %s
                             </div>
