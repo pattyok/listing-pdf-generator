@@ -565,18 +565,13 @@ class SimpleListingPDFGenerator {
     private function build_html($data, $qr_code) {
         error_log(print_r($data, true));
         
-        // Hero image section
+        // Hero image section with improved layout
         $hero_image_section = '';
         if ($data['hero_image']) {
-            $hero_image_section = sprintf(
-                '<div style="text-align: center; margin: 8px 0;">
-                    <img src="%s" style="max-height: 100px; max-width: 100%%; width: auto;" alt="Business Image">
-                </div>',
-                esc_url($data['hero_image'])
-            );
-        } else {
-            // Placeholder when no image
-            $hero_image_section = '<div style="text-align: center; margin: 8px 0; color: #999; font-style: italic;">No image available</div>';
+            $hero_image_section = '
+            <div style="float: left; margin: 0 15px 10px 0; max-width: 200px;">
+                <img src="' . esc_url($data['hero_image']) . '" style="width: 100%; height: auto; max-height: 150px; object-fit: cover; border-radius: 5px;" alt="Business Image">
+            </div>';
         }
         
         return sprintf('
@@ -693,20 +688,10 @@ class SimpleListingPDFGenerator {
         
         %s
         
-        <table style="width: 100%%; border-collapse: collapse; margin: 15px 0;">
-            <tr>
-                <td style="width: 50%%; vertical-align: top; padding-right: 20px;">
-                    <div style="padding: 15px;">
-                        %s
-                    </div>
-                </td>
-                <td style="width: 50%%; vertical-align: top;">
-                    <div style="padding: 15px;">
-                        %s
-                    </div>
-                </td>
-            </tr>
-        </table>
+        <div style="margin: 15px 0;">
+            %s
+            %s
+        </div>
         
         <table style="width: 100%%; border-collapse: collapse; margin: 15px 0;">
             <tr>
@@ -750,7 +735,7 @@ class SimpleListingPDFGenerator {
         esc_html($data['name']),
         '',
         $hero_image_section,
-        !empty($data['about']) ? '<div class="section-title">About Us</div><div class="section-content">' . nl2br(esc_html(wp_trim_words($data['about'], 100))) . '</div>' : '<div class="section-title">About Us</div><div class="section-content" style="color: #999; font-style: italic;">No information available</div>',
+        !empty($data['about']) ? '<div class="section-title">About Us</div><div class="section-content" style="text-align: justify; line-height: 1.6;">' . nl2br(esc_html(wp_trim_words($data['about'], 150))) . '<div style="clear: both;"></div></div>' : '<div class="section-title">About Us</div><div class="section-content" style="color: #999; font-style: italic;">No information available<div style="clear: both;"></div></div>',
         !empty($data['location']) ? '<div class="contact-item"><span class="contact-label">Location:</span> ' . esc_html($data['location']) . '</div>' : '',
         !empty($data['email']) ? '<div class="contact-item"><span class="contact-label">Email:</span> ' . esc_html($data['email']) . '</div>' : '',
         !empty($data['phone']) ? '<div class="contact-item"><span class="contact-label">Phone:</span> ' . esc_html($data['phone']) . '</div>' : '',
