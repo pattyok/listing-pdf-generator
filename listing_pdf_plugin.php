@@ -243,7 +243,7 @@ class SimpleListingPDFGenerator {
 		if ($primary_image_id) {
 			$primary_image = wp_get_attachment_image_url($primary_image_id, 'medium');
 
-			if ($this->verify_image_accessible($primary_image)) {
+			if ($primary_image) {
 				return $primary_image;
 			}
 		}
@@ -252,7 +252,7 @@ class SimpleListingPDFGenerator {
         $featured_id = get_post_thumbnail_id($post_id);
         if ($featured_id) {
             $image_url = wp_get_attachment_image_url($featured_id, 'medium');
-            if ($this->verify_image_accessible($image_url)) {
+            if ($image_url) {
                 return $image_url;
             }
         }
@@ -261,7 +261,7 @@ class SimpleListingPDFGenerator {
         $logo_image_id = get_post_meta($post_id, 'logo_images_your_logo', true);
         if ($logo_image_id) {
             $logo_image = wp_get_attachment_image_url($logo_image_id, 'medium');
-            if ($this->verify_image_accessible($logo_image)) {
+            if ($logo_image) {
                 return $logo_image;
             }
         }
@@ -270,7 +270,7 @@ class SimpleListingPDFGenerator {
         $gallery_ids = get_post_meta($post_id, 'logo_images_additonal_images', true);
         if ($gallery_ids && is_array($gallery_ids) && !empty($gallery_ids[0])) {
             $image_url = wp_get_attachment_image_url($gallery_ids[0], 'medium');
-            if ($this->verify_image_accessible($image_url)) {
+            if ($image_url) {
                 return $image_url;
             }
         }
@@ -570,12 +570,12 @@ class SimpleListingPDFGenerator {
         if ($data['hero_image']) {
             $hero_image_section = sprintf(
                 '<div style="text-align: center; margin: 8px 0;">
-                    <img src="%s" style="max-height: 120px; max-width: 180px; width: auto; height: auto;" alt="Business Image">
+                    <img src="%s" width="150" height="100" style="border: 1px solid #ddd; border-radius: 5px;" alt="Business Image">
                 </div>',
                 esc_url($data['hero_image'])
             );
         } else {
-            $hero_image_section = '<div style="text-align: center; margin: 8px 0; color: #999; font-style: italic; min-height: 60px; padding-top: 30px;">No image available</div>';
+            $hero_image_section = '<div style="text-align: center; margin: 8px 0; color: #999; font-style: italic; height: 100px; line-height: 100px;">No image available</div>';
         }
         
         return sprintf('
