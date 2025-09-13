@@ -357,52 +357,54 @@ class SimpleListingPDFGenerator {
     }
     
     /**
-     * Filter out "Services" category from products and format subcategories
+     * Filter out "Services" category from products and format by categories
      */
     private function filter_products($products) {
-        $filtered_products = array();
-        $subcategories = array();
+        // Group products by parent categories
+        $categories = array();
         
         foreach ($products as $product) {
-            // Skip any term that contains "Services" (case insensitive)
-            if (stripos($product->name, 'services') === false) {
-                $product_name = $product->name;
-                
-                // Check if this looks like a subcategory (longer descriptive names)
-                // Common subcategory patterns: contains "Locally", "Raised", "Grown", "Harvested", etc.
-                $subcategory_keywords = array('locally', 'raised', 'harvested', 'grown', 'organic', 'certified', 'fresh', 'wholesale');
-                $is_subcategory = false;
-                
-                foreach ($subcategory_keywords as $keyword) {
-                    if (stripos($product_name, $keyword) !== false && strlen($product_name) > 15) {
-                        $is_subcategory = true;
-                        break;
-                    }
-                }
-                
-                if ($is_subcategory) {
-                    $subcategories[] = '<strong>' . $product_name . ':</strong>';
-                } else {
-                    $filtered_products[] = $product_name;
-                }
+            // Skip services
+            if (stripos($product->name, 'services') !== false) continue;
+            
+            // Determine category groupings based on common patterns
+            $category = $this->determine_product_category($product->name);
+            
+            if (!isset($categories[$category])) {
+                $categories[$category] = array();
             }
+            $categories[$category][] = $product->name;
         }
         
-        // Format output: subcategories with line breaks, products with commas
-        $formatted_parts = array();
-        
-        // Add subcategories first (each on own line)
-        foreach ($subcategories as $subcategory) {
-            $formatted_parts[] = $subcategory;
+        // Format output with bold category headers
+        $formatted_output = array();
+        foreach ($categories as $category => $items) {
+            $items_text = implode(', ', $items);
+            $formatted_output[] = '<strong>' . $category . ':</strong> ' . $items_text;
         }
         
-        // Add products as comma-separated list if there are any
-        if (!empty($filtered_products)) {
-            $products_line = implode(', ', $filtered_products);
-            $formatted_parts[] = $products_line;
-        }
+        return implode('<br><br>', $formatted_output);
+    }
+    
+    /**
+     * Determine product category based on name patterns
+     */
+    private function determine_product_category($product_name) {
+        $product_lower = strtolower($product_name);
         
-        return implode('<br>', $formatted_parts);
+        // Define category mappings
+        if (stripos($product_lower, 'egg') !== false) return 'Eggs';
+        if (stripos($product_lower, 'flower') !== false || stripos($product_lower, 'nursery') !== false || stripos($product_lower, 'tree') !== false) return 'Flowers, Nursery & Trees';
+        if (stripos($product_lower, 'grain') !== false || stripos($product_lower, 'pulse') !== false || stripos($product_lower, 'bean') !== false || stripos($product_lower, 'wheat') !== false) return 'Grains & Pulses';
+        if (stripos($product_lower, 'seed') !== false || stripos($product_lower, 'start') !== false || stripos($product_lower, 'plant') !== false) return 'Seeds & Starts';
+        if (stripos($product_lower, 'vegetable') !== false || stripos($product_lower, 'herb') !== false || in_array($product_lower, ['arugula', 'basil', 'beets', 'broccoli', 'cabbage', 'carrots', 'kale', 'lettuce', 'onions', 'potatoes', 'tomatoes'])) return 'Vegetables & Herbs';
+        if (stripos($product_lower, 'fruit') !== false || stripos($product_lower, 'berr') !== false || stripos($product_lower, 'apple') !== false) return 'Fruit & Berries';
+        if (stripos($product_lower, 'meat') !== false || stripos($product_lower, 'poultry') !== false || stripos($product_lower, 'beef') !== false || stripos($product_lower, 'chicken') !== false) return 'Meat & Poultry';
+        if (stripos($product_lower, 'dairy') !== false || stripos($product_lower, 'milk') !== false || stripos($product_lower, 'cheese') !== false) return 'Dairy';
+        if (stripos($product_lower, 'seafood') !== false || stripos($product_lower, 'fish') !== false) return 'Seafood';
+        
+        // Default category for uncategorized items
+        return 'Other Products';
     }
     
     /**
