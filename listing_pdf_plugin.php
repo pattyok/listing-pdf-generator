@@ -569,16 +569,16 @@ class SimpleListingPDFGenerator {
         error_log(print_r($data, true));
         
         // Content section with stacked layout
-        $about_content = !empty($data['about']) ? nl2br(esc_html(wp_trim_words($data['about'], 120))) : '<span style="color: #999; font-style: italic;">No information available</span>';
+        $about_content = !empty($data['about']) ? nl2br(esc_html(wp_trim_words($data['about'], 100))) : '<span style="color: #999; font-style: italic;">No information available</span>';
 
         if ($data['hero_image']) {
             $content_section = sprintf('
-            <div style="margin: 15px 0;">
+            <div style="margin: 8px 0;">
                 <div class="section-title">About Us</div>
-                <div style="text-align: center; margin-bottom: 15px;">
+                <div style="text-align: center; margin-bottom: 8px;">
                     <img src="%s" width="200" height="150" style="border: 1px solid #ddd;" alt="Business Photo">
                 </div>
-                <div class="section-content" style="text-align: justify; line-height: 1.5;">
+                <div class="section-content" style="text-align: justify; line-height: 1.3;">
                     %s
                 </div>
             </div>', 
@@ -586,9 +586,9 @@ class SimpleListingPDFGenerator {
             $about_content);
         } else {
             $content_section = sprintf('
-            <div style="margin: 15px 0;">
+            <div style="margin: 8px 0;">
                 <div class="section-title">About Us</div>
-                <div class="section-content" style="text-align: justify; line-height: 1.5;">
+                <div class="section-content" style="text-align: justify; line-height: 1.3;">
                     %s
                 </div>
             </div>', 
@@ -599,21 +599,21 @@ class SimpleListingPDFGenerator {
         <style>
             body { 
                 font-family: helvetica, Arial, sans-serif; 
-                font-size: 11pt; 
-                line-height: 1.4; 
+                font-size: 10pt; 
+                line-height: 1.3; 
                 color: #333; 
                 margin: 0; 
                 padding: 0; 
             }
             
             .business-name {
-                font-size: 20pt;
+                font-size: 18pt;
                 font-weight: bold;
                 color: white;
                 background-color: #004D43;
-                margin-bottom: 10px;
+                margin-bottom: 8px;
                 text-align: center;
-                padding: 15px 8px;
+                padding: 12px 8px;
                 border-radius: 5px;
             }
             
@@ -621,55 +621,55 @@ class SimpleListingPDFGenerator {
                 color: #004D43;
                 font-size: 10pt;
                 font-weight: bold;
-                margin-bottom: 15px;
+                margin-bottom: 10px;
                 text-align: center;
             }
             
             .contact-section {
                 background-color: #f0f0f0;
-                padding: 15px;
-                margin: 15px 0;
+                padding: 8px;
+                margin: 8px 0;
                 border-left: 4px solid #6AA338;
             }
             
             .contact-item {
-                margin-bottom: 8px;
-                font-size: 11pt;
+                margin-bottom: 4px;
+                font-size: 10pt;
             }
             
             .contact-label {
                 font-weight: bold;
                 color: #004D43;
-                width: 70px;
+                width: 60px;
                 display: inline-block;
             }
             
             .section {
-                margin: 0px 0;
+                margin: 5px 0;
             }
             
             .section-title {
-                font-size: 14pt;
+                font-size: 12pt;
                 font-weight: bold;
                 color: #004D43;
-                margin-bottom: 10px;
+                margin-bottom: 6px;
             }
             
             .section-content {
-                font-size: 11pt;
-                line-height: 1.5;
+                font-size: 10pt;
+                line-height: 1.3;
             }
             
             .products-list {
-                padding: 12px;
+                padding: 6px;
             }
             
             .certification-badge {
                 color: #004D43;
-                padding: 4px 8px;
-                font-size: 9pt;
+                padding: 2px 6px;
+                font-size: 8pt;
                 font-weight: bold;
-                margin: 2px;
+                margin: 1px;
                 display: inline-block;
             }
             
@@ -682,25 +682,25 @@ class SimpleListingPDFGenerator {
             }
             
             .qr-title {
-                font-size: 12pt;
+                font-size: 11pt;
                 font-weight: bold;
-                margin-bottom: 10px;
+                margin-bottom: 6px;
                 color: #004D43;
             }
             
             .footer {
-                margin-top: 30px;
-                padding-top: 15px;
+                margin-top: 15px;
+                padding-top: 8px;
                 border-top: 2px solid #e0e0e0;
                 text-align: center;
-                font-size: 9pt;
+                font-size: 8pt;
                 color: #666;
             }
             
             .website-url {
                 font-weight: bold;
                 color: #6AA338;
-                margin-bottom: 5px;
+                margin-bottom: 3px;
             }
         </style>
         
@@ -713,11 +713,11 @@ class SimpleListingPDFGenerator {
         
         %s
         
-        <table style="width: 100%%; border-collapse: collapse; margin: 15px 0;">
+        <table style="width: 100%%; border-collapse: collapse; margin: 8px 0;">
             <tr>
                 <td style="width: 65%%; vertical-align: top; padding-right: 20px;">
-                    <div style="padding: 15px;">
-                        <div style="font-weight: bold; color: #004D43; margin-bottom: 10px;">Contact Information</div>
+                    <div style="padding: 8px;">
+                        <div style="font-weight: bold; color: #004D43; margin-bottom: 6px;">Contact Information</div>
                         %s
                         %s
                         %s
@@ -725,7 +725,7 @@ class SimpleListingPDFGenerator {
                     </div>
                 </td>
                 <td style="width: 35%%; vertical-align: top;">
-                    <div style="text-align: center; padding: 15px;">
+                    <div style="text-align: center; padding: 8px;">
                         <div class="qr-title">Scan for more details</div>
                         <img src="%s" style="width: 100px; height: 100px;" alt="QR Code">
                     </div>
