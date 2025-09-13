@@ -568,17 +568,16 @@ class SimpleListingPDFGenerator {
     private function build_html($data, $qr_code) {
         error_log(print_r($data, true));
         
-        // Content section with just business image (no map)
+        // Content section with image floated left and text wrapping around it
         $content_section = '';
 
         if ($data['hero_image']) {
             $content_section = '
-            <div style="text-align: center; margin: 8px 0;">
-                <div style="margin-bottom: 5px; font-weight: bold; color: #004D43; font-size: 10pt;">Photo</div>
-                <img src="' . esc_url($data['hero_image']) . '" width="200" height="140" style="border: 1px solid #ddd;" alt="Business Photo">
+            <div style="margin: 8px 0;">
+                <img src="' . esc_url($data['hero_image']) . '" width="150" height="110" style="float: left; margin: 0 15px 10px 0; border: 1px solid #ddd;" alt="Business Photo">
             </div>';
         } else {
-            $content_section = '<div style="text-align: center; margin: 8px 0; color: #999; font-style: italic; height: 50px; line-height: 50px;">No image available</div>';
+            $content_section = '';
         }
         
         return sprintf('
@@ -697,16 +696,14 @@ class SimpleListingPDFGenerator {
         
         %s
         
-        <table style="width: 100%%; border-collapse: collapse; margin: 15px 0;">
-            <tr>
-                <td style="width: 100%%; vertical-align: top;">
-                    <div class="section-title">About Us</div>
-                    <div class="section-content" style="text-align: justify; line-height: 1.5;">
-                        %s
-                    </div>
-                </td>
-            </tr>
-        </table>
+        %s
+        <div style="margin: 15px 0;">
+            <div class="section-title">About Us</div>
+            <div class="section-content" style="text-align: justify; line-height: 1.5;">
+                %s
+                <div style="clear: both; margin-top: 10px;"></div>
+            </div>
+        </div>
         
         <table style="width: 100%%; border-collapse: collapse; margin: 15px 0;">
             <tr>
@@ -748,6 +745,7 @@ class SimpleListingPDFGenerator {
         
         // Data substitutions
         esc_html($data['name']),
+        '',
         '',
         $content_section,
         !empty($data['about']) ? nl2br(esc_html(wp_trim_words($data['about'], 150))) : '<span style="color: #999; font-style: italic;">No information available</span>',
