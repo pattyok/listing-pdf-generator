@@ -283,36 +283,64 @@ class SimpleListingPDFGenerator {
     /**
      * Capture screenshot of map from listing page
      */
-    private function capture_map_screenshot($listing_url) {
+    private function capture_map_screenshot($listing_url, $post_id = null) {
         if (empty($listing_url)) return false;
         
         try {
-            // Simple screenshot service that works reliably
-            $screenshot_url = 'https://image.thum.io/get/width/300/crop/200/noanimate/' . urlencode($listing_url);
+            error_log('PDF Generation: Attempting to capture screenshot for: ' . $listing_url);
             
-            // Test if the service responds
-            $response = wp_remote_head($screenshot_url, ['timeout' => 10]);
-            if (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200) {
-                error_log('PDF Generation: Map screenshot generated: ' . $screenshot_url);
-                return $screenshot_url;
+            // Try screenshot services that can handle dynamic content
+            $screenshot_services = [
+                // Service with delay for dynamic content
+                'https://htmlcsstoimage.com/demo?url=' . urlencode($listing_url) . '&ms_delay=5000',
+                
+                // Alternative with wait parameter
+                'https://shot.screenshotapi.net/screenshot?url=' . urlencode($listing_url) . '&delay=5000',
+                
+                // Basic service
+                'https://image.thum.io/get/width/300/crop/200/' . urlencode($listing_url)
+            ];
+            
+            foreach ($screenshot_services as $service_url) {
+                $response = wp_remote_head($service_url, [
+                    'timeout' => 15,
+                    'user-agent' => 'PDF Generator'
+                ]);
+                
+                if (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200) {
+                    error_log('PDF Generation: Screenshot service success');
+                    return $service_url;
+                }
             }
             
-            // Fallback to Google Maps static API if we have address
-            $address = get_post_meta(get_the_ID(), 'location_address', true);
-            if (!empty($address)) {
-                $maps_url = 'https://maps.googleapis.com/maps/api/staticmap?size=300x200&zoom=15&markers=' . urlencode($address) . '&key=YOUR_API_KEY';
-                // Note: Replace YOUR_API_KEY with actual Google Maps API key
-                error_log('PDF Generation: Fallback to Google Maps static: ' . $maps_url);
-                return $maps_url;
-            }
-            
-            error_log('PDF Generation: Map screenshot failed for URL: ' . $listing_url);
-            return false;
+            // If screenshot fails, create address placeholder
+            return $this->create_location_placeholder($post_id);
             
         } catch (Exception $e) {
             error_log('PDF Generation: Screenshot error: ' . $e->getMessage());
-            return false;
+            return $this->create_location_placeholder($post_id);
         }
+    }
+    
+    /**
+     * Create simple location placeholder when maps fail
+     */
+    private function create_location_placeholder($post_id) {
+        if (!$post_id) return false;
+        
+        // Get address for placeholder
+        $address = get_post_meta($post_id, 'location_address', true);
+        if (empty($address)) {
+            $address = get_post_meta($post_id, 'listing_location', true);
+        }
+        
+        if (empty($address)) {
+            $address = 'Location Available Online';
+        }
+        
+        // Create simple placeholder image
+        $placeholder_text = urlencode(wp_trim_words($address, 6));
+        return 'https://via.placeholder.com/300x200/f5f5f5/666666?text=' . $placeholder_text;
     }
     
     /**
@@ -617,7 +645,7 @@ class SimpleListingPDFGenerator {
             }
             
             // Map screenshot column
-            $map_screenshot_url = $this->capture_map_screenshot($data['url']);
+            $map_screenshot_url = $this->capture_map_screenshot($data['url'], $data['post_id']);
             if ($map_screenshot_url) {
                 $width = $data['hero_image'] ? '50%' : '100%';
                 $content_section .= '
