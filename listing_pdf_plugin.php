@@ -284,42 +284,9 @@ class SimpleListingPDFGenerator {
      * Capture screenshot of map from listing page
      */
     private function capture_map_screenshot($listing_url, $post_id = null) {
-        if (empty($listing_url)) return false;
-        
-        try {
-            error_log('PDF Generation: Attempting to capture screenshot for: ' . $listing_url);
-            
-            // Try screenshot services that can handle dynamic content
-            $screenshot_services = [
-                // Service with delay for dynamic content
-                'https://htmlcsstoimage.com/demo?url=' . urlencode($listing_url) . '&ms_delay=5000',
-                
-                // Alternative with wait parameter
-                'https://shot.screenshotapi.net/screenshot?url=' . urlencode($listing_url) . '&delay=5000',
-                
-                // Basic service
-                'https://image.thum.io/get/width/300/crop/200/' . urlencode($listing_url)
-            ];
-            
-            foreach ($screenshot_services as $service_url) {
-                $response = wp_remote_head($service_url, [
-                    'timeout' => 15,
-                    'user-agent' => 'PDF Generator'
-                ]);
-                
-                if (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200) {
-                    error_log('PDF Generation: Screenshot service success');
-                    return $service_url;
-                }
-            }
-            
-            // If screenshot fails, create address placeholder
-            return $this->create_location_placeholder($post_id);
-            
-        } catch (Exception $e) {
-            error_log('PDF Generation: Screenshot error: ' . $e->getMessage());
-            return $this->create_location_placeholder($post_id);
-        }
+        // Skip screenshot services entirely - they're unreliable for dynamic content
+        // Just create a useful location placeholder instead
+        return $this->create_location_placeholder($post_id);
     }
     
     /**
@@ -335,12 +302,15 @@ class SimpleListingPDFGenerator {
         }
         
         if (empty($address)) {
-            $address = 'Location Available Online';
+            return false; // Don't show location section if no address
         }
         
-        // Create simple placeholder image
-        $placeholder_text = urlencode(wp_trim_words($address, 6));
-        return 'https://via.placeholder.com/300x200/f5f5f5/666666?text=' . $placeholder_text;
+        // Create a more detailed location box instead of trying to screenshot
+        $clean_address = wp_trim_words($address, 10);
+        
+        // Use a service that creates a text-based "map" image
+        $map_text = urlencode("📍\n" . $clean_address . "\n\nView Interactive Map\nOnline");
+        return 'https://via.placeholder.com/300x200/e8f5e8/004D43?text=' . $map_text;
     }
     
     /**
