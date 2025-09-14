@@ -646,7 +646,7 @@ class SimpleListingPDFGenerator {
                 background-color: #004D43;
                 margin-bottom: 8px;
                 text-align: center;
-                padding: 12px 8px;
+                padding: 24px 8px;
                 border-radius: 5px;
             }
             
