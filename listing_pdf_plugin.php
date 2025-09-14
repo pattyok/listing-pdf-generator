@@ -833,8 +833,22 @@ class SimpleListingPDFGenerator {
         return sprintf('
         <style>
             body { font-family: helvetica, Arial, sans-serif; font-size: 12pt; }
-            .header { background-color: #6AA338; color: white; padding: 15px; text-align: center; margin-bottom: 15px; }
-            .header h1 { font-weight: bold; color: white; margin: 0; }
+            .header { 
+                background-color: #6AA338; 
+                color: white; 
+                padding: 25px 15px; 
+                text-align: center; 
+                margin-bottom: 15px;
+                min-height: 40px;
+                line-height: 1.4;
+            }
+            .header h1 { 
+                font-weight: bold; 
+                color: white; 
+                margin: 0;
+                font-size: 16pt;
+                padding: 8px 0;
+            }
             .business-name { font-size: 18pt; font-weight: bold; margin-bottom: 10px; }
             .contact { margin: 10px 0; }
             .qr-section { text-align: center; margin: 15px 0; }
