@@ -773,7 +773,7 @@ class SimpleListingPDFGenerator {
         <div class="footer">
             <div class="website-url">%s</div>
             <div style="margin-top: 10px; font-size: 8pt;">
-                Generated from Eat Local First • Visit %s
+                Generated from %s
             </div>
         </div>',
         
