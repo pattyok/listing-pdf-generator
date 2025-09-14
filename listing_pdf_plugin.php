@@ -103,6 +103,8 @@ class SimpleListingPDFGenerator {
         $pdf->setPrintFooter(false);
         $pdf->SetMargins(15, 15, 15);
         $pdf->SetAutoPageBreak(TRUE, 15);
+        $pdf->setCellHeightRatio(1.0);
+        $pdf->SetLineWidth(0.1);
         $pdf->AddPage();
 
         return $pdf;
@@ -328,7 +330,7 @@ class SimpleListingPDFGenerator {
             $formatted_output[] = '<strong>' . $category . ':</strong> ' . $items_text;
         }
 
-        return implode('<br><br>', $formatted_output);
+        return implode('<br>', $formatted_output);
     }
 
     /**
@@ -377,9 +379,9 @@ class SimpleListingPDFGenerator {
             </tr>
         </table>
 
-        %s
-        %s
-        %s
+        %s<tcpdf method="Ln" params="2" />
+        %s<tcpdf method="Ln" params="2" />
+        %s<tcpdf method="Ln" params="2" />
         %s
 
         <div class="footer">
@@ -552,20 +554,17 @@ class SimpleListingPDFGenerator {
                 display: inline-block;
             }
 
-            .section {
-                margin: 4px 0;
-            }
-
             .section-title {
                 font-size: 12pt;
                 font-weight: bold;
                 color: #004D43;
-                margin-bottom: 6px;
+                padding-bottom: 2pt;
             }
 
             .section-content {
                 font-size: 10pt;
-                line-height: 1.3;
+                line-height: 1.1;
+                padding-bottom: 4pt;
             }
 
             .products-list {
