@@ -364,6 +364,13 @@ class SimpleListingPDFGenerator {
         $categories = array();
         
         foreach ($products as $product) {
+            // Skip the top-level "Locally Raised, Harvested, Grown" category
+            if (stripos($product->name, 'locally raised') !== false || 
+                stripos($product->name, 'harvested') !== false || 
+                stripos($product->name, 'grown') !== false) {
+                continue;
+            }
+            
             // Skip services
             if (stripos($product->name, 'services') !== false) continue;
             
@@ -392,23 +399,25 @@ class SimpleListingPDFGenerator {
     private function determine_product_category($product_name) {
         $product_lower = strtolower($product_name);
         
-        // New: Locally Raised, Harvested, Grown group
-        if (
-            stripos($product_lower, 'locally raised') !== false ||
-            stripos($product_lower, 'locally harvested') !== false ||
-            stripos($product_lower, 'locally grown') !== false
-        ) return 'Locally Raised, Harvested, Grown';
-        
         // Define category mappings
         if (stripos($product_lower, 'egg') !== false) return 'Eggs';
         if (stripos($product_lower, 'flower') !== false || stripos($product_lower, 'nursery') !== false || stripos($product_lower, 'tree') !== false) return 'Flowers, Nursery & Trees';
         if (stripos($product_lower, 'grain') !== false || stripos($product_lower, 'pulse') !== false || stripos($product_lower, 'bean') !== false || stripos($product_lower, 'wheat') !== false) return 'Grains & Pulses';
         if (stripos($product_lower, 'seed') !== false || stripos($product_lower, 'start') !== false || stripos($product_lower, 'plant') !== false) return 'Seeds & Starts';
-        if (stripos($product_lower, 'vegetable') !== false || stripos($product_lower, 'herb') !== false || in_array($product_lower, ['arugula', 'basil', 'beets', 'broccoli', 'cabbage', 'carrots', 'kale', 'lettuce', 'onions', 'potatoes', 'tomatoes'])) return 'Vegetables & Herbs';
-        if (stripos($product_lower, 'fruit') !== false || stripos($product_lower, 'berr') !== false || stripos($product_lower, 'apple') !== false) return 'Fruit & Berries';
         if (stripos($product_lower, 'meat') !== false || stripos($product_lower, 'poultry') !== false || stripos($product_lower, 'beef') !== false || stripos($product_lower, 'chicken') !== false) return 'Meat & Poultry';
         if (stripos($product_lower, 'dairy') !== false || stripos($product_lower, 'milk') !== false || stripos($product_lower, 'cheese') !== false) return 'Dairy';
         if (stripos($product_lower, 'seafood') !== false || stripos($product_lower, 'fish') !== false) return 'Seafood';
+        
+        // Vegetables & Herbs - most comprehensive category for individual vegetables
+        $vegetables = array('arugula', 'basil', 'beets', 'broccoli', 'cabbage', 'carrots', 'kale', 'lettuce', 'onions', 'potatoes', 'tomatoes', 'asian greens', 'bok choy', 'bell peppers', 'brussels sprouts', 'cauliflower', 'celeriac', 'chard', 'chives', 'collard greens', 'corn', 'cucumbers', 'daikon', 'dill', 'eggplant', 'escarole', 'garlic', 'herbs', 'kohlrabi', 'leeks', 'mustard greens', 'oregano', 'parsley', 'parsnips', 'peas', 'peppers', 'popcorn', 'pumpkins', 'radicchio', 'radishes', 'rhubarb', 'salad greens', 'shallots', 'spinach', 'squash', 'sunchokes', 'thyme', 'tomatillos', 'turnips');
+        
+        foreach ($vegetables as $veg) {
+            if (stripos($product_lower, $veg) !== false) {
+                return 'Vegetables & Herbs';
+            }
+        }
+        
+        if (stripos($product_lower, 'fruit') !== false || stripos($product_lower, 'berr') !== false || stripos($product_lower, 'apple') !== false) return 'Fruit & Berries';
         
         // Default category for uncategorized items
         return 'Other Products';
