@@ -360,7 +360,7 @@ class SimpleListingPDFGenerator {
 
         <div class="business-name">%s</div>
 
-        <table style="width: 100%%; border-collapse: collapse; margin: 8px 0;">
+        <table style="width: 100%%; border-collapse: collapse; margin: 4px 0;">
             <tr>
                 <td style="width: 65%%; vertical-align: top; padding-right: 20px;">
                     <div style="padding: 8px;">
@@ -425,7 +425,7 @@ class SimpleListingPDFGenerator {
     private function build_content_section($data, $about_content) {
         if ($data['hero_image']) {
             return sprintf('
-            <div style="margin: 8px 0;">
+            <div style="margin: 4px 0;">
                 <div class="section-title" style="margin-bottom: 6px;">About Us</div>
                 <table style="width: 100%%; border-collapse: collapse;">
                     <tr>
@@ -445,7 +445,7 @@ class SimpleListingPDFGenerator {
         }
 
         return sprintf('
-        <div style="margin: 8px 0;">
+        <div style="margin: 4px 0;">
             <div class="section-title">About Us</div>
             <div class="section-content" style="text-align: justify; line-height: 1.3;">
                 %s
@@ -553,7 +553,7 @@ class SimpleListingPDFGenerator {
             }
 
             .section {
-                margin: 8px 0;
+                margin: 4px 0;
             }
 
             .section-title {
@@ -580,7 +580,7 @@ class SimpleListingPDFGenerator {
             }
 
             .footer {
-                margin-top: 15px;
+                margin-top: 8px;
                 padding-top: 8px;
                 border-top: 2px solid #e0e0e0;
                 text-align: center;
