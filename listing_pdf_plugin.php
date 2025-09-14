@@ -56,9 +56,14 @@ class SimpleListingPDFGenerator {
             $this->load_tcpdf();
 
             $pdf = $this->create_pdf_instance($data['name']);
-            $html = $this->build_html($data, $qr_code);
 
-            $pdf->writeHTML($html, true, false, true, false, '');
+            try {
+                $this->build_pdf_with_native_methods($pdf, $data, $qr_code);
+            } catch (Exception $e) {
+                // Fallback to HTML method
+                $html = $this->build_html($data, $qr_code);
+                $pdf->writeHTML($html, true, false, true, false, '');
+            }
 
             return $pdf->Output('', 'S');
 
@@ -331,6 +336,90 @@ class SimpleListingPDFGenerator {
         }
 
         return implode('<br>', $formatted_output);
+    }
+
+    /**
+     * Build PDF using TCPDF's native methods for better spacing control
+     */
+    private function build_pdf_with_native_methods($pdf, $data, $qr_code) {
+        // Business name header with background
+        $pdf->SetFillColor(0, 77, 67); // #004D43
+        $pdf->SetTextColor(255, 255, 255);
+        $pdf->SetFont('helvetica', 'B', 18);
+        $pdf->Cell(0, 20, $data['name'], 0, 1, 'C', 1);
+
+        $pdf->Ln(3); // Small gap after header
+
+        // Contact info and QR code in two columns
+        $pdf->SetTextColor(0, 0, 0);
+        $pdf->SetFont('helvetica', 'B', 11);
+        $pdf->Cell(0, 6, 'Contact Information', 0, 1, 'L');
+        $pdf->Ln(2);
+
+        // Contact details
+        $pdf->SetFont('helvetica', '', 10);
+        if (!empty($data['email'])) {
+            $pdf->Cell(30, 5, 'Email:', 0, 0, 'L');
+            $pdf->Cell(0, 5, $data['email'], 0, 1, 'L');
+        }
+        if (!empty($data['phone'])) {
+            $pdf->Cell(30, 5, 'Phone:', 0, 0, 'L');
+            $pdf->Cell(0, 5, $data['phone'], 0, 1, 'L');
+        }
+        if (!empty($data['website'])) {
+            $pdf->Cell(30, 5, 'Website:', 0, 0, 'L');
+            $pdf->Cell(0, 5, $data['website'], 0, 1, 'L');
+        }
+
+        $pdf->Ln(4);
+
+        // About Us section
+        if (!empty($data['about'])) {
+            $pdf->SetFont('helvetica', 'B', 12);
+            $pdf->SetTextColor(0, 77, 67);
+            $pdf->Cell(0, 6, 'About Us', 0, 1, 'L');
+            $pdf->Ln(1);
+
+            $pdf->SetFont('helvetica', '', 10);
+            $pdf->SetTextColor(0, 0, 0);
+            $about_text = wp_trim_words($data['about'], 100);
+            $pdf->MultiCell(0, 5, $about_text, 0, 'J', 0, 1);
+        }
+
+        $pdf->Ln(3);
+
+        // Products section
+        if (!empty($data['products'])) {
+            $pdf->SetFont('helvetica', 'B', 12);
+            $pdf->SetTextColor(0, 77, 67);
+            $pdf->Cell(0, 6, 'Products & Services', 0, 1, 'L');
+            $pdf->Ln(1);
+
+            $pdf->SetFont('helvetica', '', 10);
+            $pdf->SetTextColor(0, 0, 0);
+            // Strip HTML tags for native method
+            $products_text = strip_tags(str_replace('<br>', "\n", $data['products']));
+            $pdf->MultiCell(0, 5, $products_text, 0, 'L', 0, 1);
+        }
+
+        $pdf->Ln(3);
+
+        // Wholesale section
+        $pdf->SetFont('helvetica', 'B', 12);
+        $pdf->SetTextColor(0, 77, 67);
+        $pdf->Cell(0, 6, 'Wholesale', 0, 1, 'L');
+        $pdf->Ln(1);
+
+        $pdf->SetFont('helvetica', '', 10);
+        $pdf->SetTextColor(0, 0, 0);
+        $pdf->MultiCell(0, 5, 'Contact us for wholesale products or scan the QR code for more details.', 0, 'L', 0, 1);
+
+        // Add QR code in bottom right
+        if ($qr_code && strpos($qr_code, 'data:image') === 0) {
+            // Handle base64 QR code
+            $pdf->SetXY(-30, -40);
+            // You'll need to save base64 as temp file for Image() method
+        }
     }
 
     /**
