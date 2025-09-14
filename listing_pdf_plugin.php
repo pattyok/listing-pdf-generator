@@ -820,10 +820,6 @@ class CompleteListingPDFPlugin {
         add_action('wp_footer', array($this, 'add_pdf_button_via_javascript'));
         add_action('genesis_entry_footer', array($this, 'add_pdf_button_to_entry_footer'));
         add_action('thesis_hook_after_post', array($this, 'add_pdf_button_to_entry_footer'));
-        
-        // Add debug page for admins
-        add_action('wp_ajax_pdf_debug_test', array($this, 'handle_debug_test'));
-        add_action('wp_footer', array($this, 'add_debug_link_for_admins'));
     }
     
     /**
@@ -1171,109 +1167,7 @@ class CompleteListingPDFPlugin {
         }
     }
     
-    /**
-     * Handle PDF debug test (admin only)
-     */
-    public function handle_debug_test() {
-        // Security check
-        if (!current_user_can('manage_options')) {
-            wp_die('Access denied');
-        }
-        
-        echo "<h1>🐞 PDF Generation Debug Test</h1>";
-        
-        // Use specified post ID or find a post to test with
-        $post_id = isset($_GET['post_id']) ? intval($_GET['post_id']) : 0;
-        
-        if ($post_id) {
-            $test_post = get_post($post_id);
-            if (!$test_post) {
-                echo "<p>❌ Post with ID $post_id not found</p>";
-                wp_die();
-            }
-        } else {
-            // Fallback: find any published post
-            $test_posts = get_posts(array('numberposts' => 1, 'post_status' => 'publish'));
-            if (empty($test_posts)) {
-                echo "<p>❌ No published posts found for testing</p>";
-                wp_die();
-            }
-            $test_post = $test_posts[0];
-            $post_id = $test_post->ID;
-        }
-        
-        echo "<p>Testing with post: <strong>" . esc_html($test_post->post_title) . "</strong> (ID: $post_id)</p>";
-        echo "<p>Post type: <strong>" . esc_html($test_post->post_type) . "</strong></p>";
-        
-        // Enable error display
-        ini_set('display_errors', 1);
-        error_reporting(E_ALL);
-        
-        try {
-            $pdf_generator = new SimpleListingPDFGenerator();
-            echo "<p>✅ PDF Generator class created</p>";
-            
-            // Capture any output/errors during PDF generation
-            ob_start();
-            $pdf_content = $pdf_generator->create_listing_pdf($post_id);
-            $output = ob_get_clean();
-            
-            if ($output) {
-                echo "<p><strong>Output during PDF generation:</strong></p>";
-                echo "<pre style='background: #ffe6e6; padding: 10px;'>" . esc_html($output) . "</pre>";
-            }
-            
-            if ($pdf_content) {
-                echo "<p>✅ PDF generated successfully! Size: " . strlen($pdf_content) . " bytes</p>";
-                echo "<p>✅ Test completed - PDF generation is working!</p>";
-            } else {
-                echo "<p>❌ PDF generation returned false</p>";
-                
-                // Check if TCPDF is available
-                if (!class_exists('TCPDF')) {
-                    echo "<p>❌ <strong>TCPDF class not found!</strong> This is likely the issue.</p>";
-                    
-                    // Show TCPDF paths we're checking
-                    $tcpdf_paths = array(
-                        plugin_dir_path(__FILE__) . 'vendor/tecnickcom/tcpdf/tcpdf.php',
-                        plugin_dir_path(__FILE__) . '../vendor/tecnickcom/tcpdf/tcpdf.php',
-                        ABSPATH . 'vendor/tecnickcom/tcpdf/tcpdf.php'
-                    );
-                    
-                    echo "<p><strong>Checking TCPDF paths:</strong></p>";
-                    foreach ($tcpdf_paths as $path) {
-                        $exists = file_exists($path);
-                        echo "<p>" . ($exists ? "✅" : "❌") . " " . esc_html($path) . "</p>";
-                    }
-                } else {
-                    echo "<p>✅ TCPDF class is available</p>";
-                }
-            }
-        } catch (Exception $e) {
-            echo "<p>❌ Error: " . esc_html($e->getMessage()) . "</p>";
-            echo "<pre>" . esc_html($e->getTraceAsString()) . "</pre>";
-        } catch (Error $e) {
-            echo "<p>❌ Fatal Error: " . esc_html($e->getMessage()) . "</p>";
-            echo "<pre>" . esc_html($e->getTraceAsString()) . "</pre>";
-        }
-        
-        wp_die();
-    }
     
-    /**
-     * Add debug link for admins
-     */
-    public function add_debug_link_for_admins() {
-        if (current_user_can('manage_options') && is_singular()) {
-            $current_post_id = get_the_ID();
-            $version_info = 'Simple v4ca30b8'; // Version identifier
-            echo '<div id="pdf-debug-link" style="position: fixed; bottom: 20px; left: 20px; z-index: 9999; background: #333; color: white; padding: 8px 12px; border-radius: 4px; font-size: 12px;">
-                <a href="#" onclick="window.open(\''. admin_url('admin-ajax.php') .'?action=pdf_debug_test&post_id=' . $current_post_id . '\', \'_blank\', \'width=800,height=600,scrollbars=yes\'); return false;" style="color: #fff; text-decoration: none;">
-                    🐞 Test PDF (' . $version_info . ')
-                </a>
-            </div>';
-        }
-    }
 }
 
 // Initialize the plugin
