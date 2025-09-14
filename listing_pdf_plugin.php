@@ -575,12 +575,18 @@ class SimpleListingPDFGenerator {
             $content_section = sprintf('
             <div style="margin: 8px 0;">
                 <div class="section-title">About Us</div>
-                <div style="text-align: center; margin-bottom: 8px;">
-                    <img src="%s" width="200" height="150" style="border: 1px solid #ddd;" alt="Business Photo">
-                </div>
-                <div class="section-content" style="text-align: justify; line-height: 1.3;">
-                    %s
-                </div>
+                <table style="width: 100%%; border-collapse: collapse;">
+                    <tr>
+                        <td style="width: 30%%; vertical-align: top; text-align: center; padding-right: 10px;">
+                            <img src="%s" width="150" height="120" style="border: 1px solid #ddd;" alt="Business Photo">
+                        </td>
+                        <td style="width: 70%%; vertical-align: top; padding-left: 5px;">
+                            <div class="section-content" style="text-align: justify; line-height: 1.3;">
+                                %s
+                            </div>
+                        </td>
+                    </tr>
+                </table>
             </div>', 
             esc_url($data['hero_image']), 
             $about_content);
