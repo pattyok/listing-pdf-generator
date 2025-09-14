@@ -675,20 +675,47 @@ class CompleteListingPDFPlugin {
         jQuery(document).ready(function($) {
             var pdfButton = $('<div class="pdf-generator-wrapper"><button type="button" id="generate-pdf-btn" class="pdf-generator-btn" data-post-id="<?php echo esc_js($post_id); ?>">📄 Download PDF</button></div>');
 
-            // Try to place button in optimal location
-            var selectors = [
+            // Try to place button next to edit button first, then fallback locations
+            var inserted = false;
+
+            // Priority 1: Look for edit button locations
+            var editSelectors = [
                 '.entry-meta .edit-link',
-                '.entry-content',
-                '.post-content',
-                'main article'
+                '.post-edit-link',
+                '.edit-post-link',
+                '.entry-footer .edit-link',
+                '.listing-actions',
+                '.post-actions',
+                '[class*="edit"]'
             ];
 
-            var inserted = false;
-            for (var i = 0; i < selectors.length && !inserted; i++) {
-                var element = $(selectors[i]);
-                if (element.length > 0) {
-                    element.last().after(pdfButton);
+            for (var i = 0; i < editSelectors.length && !inserted; i++) {
+                var editElement = $(editSelectors[i]);
+                if (editElement.length > 0) {
+                    editElement.last().after(pdfButton);
                     inserted = true;
+                    break;
+                }
+            }
+
+            // Priority 2: Fallback to content areas
+            if (!inserted) {
+                var contentSelectors = [
+                    '.entry-content',
+                    '.post-content',
+                    '.listing-content',
+                    'article .content',
+                    'main article',
+                    '.single-post article'
+                ];
+
+                for (var i = 0; i < contentSelectors.length && !inserted; i++) {
+                    var contentElement = $(contentSelectors[i]);
+                    if (contentElement.length > 0) {
+                        contentElement.last().after(pdfButton);
+                        inserted = true;
+                        break;
+                    }
                 }
             }
 
