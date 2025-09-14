@@ -556,10 +556,21 @@ class SimpleListingPDFGenerator {
     }
 
     /**
-     * Generate QR code with simple fallback
+     * Generate QR code with base64 encoding to avoid URL issues
      */
     private function generate_qr_code($url) {
-        return 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' . urlencode($url);
+        $qr_url = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' . urlencode($url);
+        
+        $response = wp_remote_get($qr_url, array('timeout' => 10));
+        
+        if (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200) {
+            $image_data = wp_remote_retrieve_body($response);
+            $base64 = base64_encode($image_data);
+            return 'data:image/png;base64,' . $base64;
+        }
+        
+        // Fallback to URL if base64 fails
+        return $qr_url;
     }
     
     /**
@@ -751,25 +762,21 @@ class SimpleListingPDFGenerator {
             </div>
         </div>',
         
-        // Data substitutions
-        esc_html($data['name']),
-        '',
-        '',
-        $content_section,
+        // Data substitutions in correct order
+        esc_html($data['name']), // Business name
         !empty($data['location']) ? '<div class="contact-item"><span class="contact-label">Location:</span> ' . esc_html($data['location']) . '</div>' : '',
         !empty($data['email']) ? '<div class="contact-item"><span class="contact-label">Email:</span> ' . esc_html($data['email']) . '</div>' : '',
         !empty($data['phone']) ? '<div class="contact-item"><span class="contact-label">Phone:</span> ' . esc_html($data['phone']) . '</div>' : '',
         !empty($data['website']) ? '<div class="contact-item"><span class="contact-label">Website:</span> ' . esc_html($data['website']) . '</div>' : '',
-        $qr_code,
-        !empty($data['csa_info']) ? '<div class="section"><div class="section-title">CSA Info</div><div class="section-content">' . nl2br(esc_html($data['csa_info'])) . '</div></div>' : '',
+        $qr_code, // QR code URL/base64
+        $content_section, // Content section (about us with image)
         !empty($data['products']) ? '<div class="section"><div class="section-title">Products & Services</div><div class="section-content products-list">' . $data['products'] . '</div></div>' : '',
         '<div class="section"><div class="section-title">Wholesale</div><div class="section-content">Contact us for wholesale products or scan the QR code for more details.</div></div>',
         !empty($data['certifications']) ? '<div class="section"><div class="section-title">Certifications</div><div>' . $this->format_certifications($data['certifications']) . '</div></div>' : '',
         !empty($data['growing_practices']) ? '<div class="section"><div class="section-title">Growing Practices</div><div class="section-content">' . nl2br(esc_html($data['growing_practices'])) . '</div></div>' : '',
-        !empty($data['retail_info']) ? '<div class="section"><div class="section-title">Retail Information</div><div class="section-content">' . nl2br(esc_html($data['retail_info'])) . '</div></div>' : '',
-        esc_html($data['website'] ?: $data['url']),
-        esc_html($data['updated']),
-        esc_html($data['url'])
+        esc_html($data['website'] ?: $data['url']), // Footer website URL
+        esc_html($data['updated']), // Updated date
+        esc_html($data['url']) // Full URL for footer
         );
     }
     
