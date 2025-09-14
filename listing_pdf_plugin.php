@@ -559,7 +559,7 @@ class SimpleListingPDFGenerator {
      * Generate QR code with base64 encoding to avoid URL issues
      */
     private function generate_qr_code($url) {
-        $qr_url = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' . urlencode($url);
+        $qr_url = 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=' . urlencode($url);
         
         $response = wp_remote_get($qr_url, array('timeout' => 10));
         
@@ -587,7 +587,7 @@ class SimpleListingPDFGenerator {
             <div style="margin: 8px 0;">
                 <table style="width: 100%%; border-collapse: collapse;">
                     <tr>
-                        <td style="width: 30%%; vertical-align: top; text-align: center; padding-right: 10px;">
+                        <td style="width: 30%%; vertical-align: bottom; text-align: center; padding-right: 10px;">
                             <img src="%s" width="150" height="120" alt="Business Photo">
                         </td>
                         <td style="width: 70%%; vertical-align: top; padding-left: 5px;">
@@ -738,7 +738,7 @@ class SimpleListingPDFGenerator {
                 <td style="width: 35%%; vertical-align: top;">
                     <div style="text-align: center; padding: 8px;">
                         <div class="qr-title">Scan for more details</div>
-                        <img src="%s" style="width: 100px; height: 100px;" alt="QR Code">
+                        <img src="%s" style="width: 80px; height: 80px;" alt="QR Code">
                     </div>
                 </td>
             </tr>
