@@ -392,6 +392,13 @@ class SimpleListingPDFGenerator {
     private function determine_product_category($product_name) {
         $product_lower = strtolower($product_name);
         
+        // New: Locally Raised, Harvested, Grown group
+        if (
+            stripos($product_lower, 'locally raised') !== false ||
+            stripos($product_lower, 'locally harvested') !== false ||
+            stripos($product_lower, 'locally grown') !== false
+        ) return 'Locally Raised, Harvested, Grown';
+        
         // Define category mappings
         if (stripos($product_lower, 'egg') !== false) return 'Eggs';
         if (stripos($product_lower, 'flower') !== false || stripos($product_lower, 'nursery') !== false || stripos($product_lower, 'tree') !== false) return 'Flowers, Nursery & Trees';
