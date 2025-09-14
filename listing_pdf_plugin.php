@@ -772,7 +772,6 @@ class SimpleListingPDFGenerator {
         
         <div class="footer">
             <div class="website-url">%s</div>
-            <div>Updated: %s</div>
             <div style="margin-top: 10px; font-size: 8pt;">
                 Generated from Eat Local First • Visit %s
             </div>
@@ -791,7 +790,6 @@ class SimpleListingPDFGenerator {
         '',
         !empty($data['growing_practices']) ? '<div class="section"><div class="section-title">Growing Practices</div><div class="section-content">' . nl2br(esc_html($data['growing_practices'])) . '</div></div>' : '',
         esc_html($data['website'] ?: $data['url']), // Footer website URL
-        esc_html($data['updated']), // Updated date
         esc_html($data['url']) // Full URL for footer
         );
     }
