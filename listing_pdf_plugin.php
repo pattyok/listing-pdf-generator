@@ -517,13 +517,13 @@ class SimpleListingPDFGenerator {
         if ($data['hero_image']) {
             return sprintf('
             <div style="margin: 4px 0;">
-                <div class="section-title" style="margin-bottom: 6px;">About Us</div>
                 <table style="width: 100%%; border-collapse: collapse;">
                     <tr>
                         <td style="width: 30%%; vertical-align: top; text-align: center; padding-right: 12px;">
                             <img src="%s" width="150" height="120" alt="Business Photo">
                         </td>
                         <td style="width: 70%%; vertical-align: top; padding-left: 12px;">
+                            <div class="section-title" style="margin-bottom: 6px;">About Us</div>
                             <div class="section-content" style="text-align: justify; line-height: 1.3;">
                                 %s
                             </div>
