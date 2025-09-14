@@ -55,17 +55,10 @@ class SimpleListingPDFGenerator {
      */
     public function create_listing_pdf($post_id) {
         try {
-            error_log('PDF Generation: Starting for post ID ' . $post_id);
-            
             $data = $this->extract_data($post_id);
-            error_log('PDF Generation: Data extracted - ' . print_r(array_keys($data), true));
-            
             $qr_code = $this->generate_qr_code(get_permalink($post_id));
-            error_log('PDF Generation: QR code generated - ' . $qr_code);
             
             if (!class_exists('TCPDF')) {
-                // TCPDF should already be loaded by the AJAX handler
-                // But try to load it if it's not available
                 $tcpdf_paths = array(
                     plugin_dir_path(__FILE__) . 'vendor/tecnickcom/tcpdf/tcpdf.php',
                     plugin_dir_path(__FILE__) . '../vendor/tecnickcom/tcpdf/tcpdf.php',
@@ -75,7 +68,6 @@ class SimpleListingPDFGenerator {
                 foreach ($tcpdf_paths as $path) {
                     if (file_exists($path)) {
                         require_once($path);
-                        error_log('PDF Generation: TCPDF loaded from ' . $path);
                         break;
                     }
                 }
@@ -83,11 +75,8 @@ class SimpleListingPDFGenerator {
                 if (!class_exists('TCPDF')) {
                     throw new Exception('TCPDF class not available');
                 }
-            } else {
-                error_log('PDF Generation: TCPDF already loaded');
             }
             
-            error_log('PDF Generation: Creating TCPDF instance');
             $pdf = new TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
             $pdf->SetCreator('Eat Local First Directory');
             $pdf->SetTitle($data['name'] . ' - Listing');
@@ -97,41 +86,24 @@ class SimpleListingPDFGenerator {
             $pdf->SetAutoPageBreak(TRUE, 15);
             $pdf->AddPage();
             
-            error_log('PDF Generation: Building HTML template');
-            
             // Try main template first, fall back to simple template if it fails
             try {
                 $html = $this->build_html($data, $qr_code);
-                
-                // Log HTML length and first 200 chars for debugging
-                error_log('PDF Generation: HTML length: ' . strlen($html));
-                error_log('PDF Generation: HTML preview: ' . substr($html, 0, 200) . '...');
-                
-                error_log('PDF Generation: Writing HTML to PDF');
                 $pdf->writeHTML($html, true, false, true, false, '');
-                
             } catch (Exception $e) {
-                error_log('PDF Generation: Main template failed, trying simple template: ' . $e->getMessage());
-                
                 // Fallback to simple template
                 $simple_html = $this->build_simple_html($data, $qr_code);
-                error_log('PDF Generation: Using simple template, length: ' . strlen($simple_html));
                 $pdf->writeHTML($simple_html, true, false, true, false, '');
             }
             
-            error_log('PDF Generation: Generating PDF output');
             $output = $pdf->Output('', 'S');
-            
-            error_log('PDF Generation: Success! PDF size: ' . strlen($output) . ' bytes');
             return $output;
             
         } catch (Exception $e) {
             error_log('PDF Generation Error: ' . $e->getMessage());
-            error_log('PDF Generation Error Stack: ' . $e->getTraceAsString());
             return false;
         } catch (Error $e) {
             error_log('PDF Generation Fatal Error: ' . $e->getMessage());
-            error_log('PDF Generation Fatal Error Stack: ' . $e->getTraceAsString());
             return false;
         }
     }
@@ -162,67 +134,8 @@ class SimpleListingPDFGenerator {
             }
         }
         
-        // DIRECT DEBUG: Let's see EXACTLY what's in wholesale_info field
-        error_log("PDF Generation: DIRECT DEBUG - Checking wholesale_info field directly");
-        $wholesale_direct = get_post_meta($post_id, 'wholesale_info', true);
-        error_log("PDF Generation: wholesale_info field content: " . var_export($wholesale_direct, true));
-        
-        // If it's a field ID, let's get the actual field value
-        if (!empty($wholesale_direct) && preg_match('/^field_[a-f0-9]+$/', $wholesale_direct)) {
-            error_log("PDF Generation: wholesale_info contains field ID: " . $wholesale_direct);
-            // Try to get the actual field value using get_field()
-            if (function_exists('get_field')) {
-                $acf_wholesale = get_field('wholesale_info', $post_id);
-                error_log("PDF Generation: ACF get_field('wholesale_info') result: " . var_export($acf_wholesale, true));
-                $data['wholesale_info'] = $acf_wholesale ?: '';
-            } else {
-                error_log("PDF Generation: ACF get_field() not available");
-                $data['wholesale_info'] = '';
-            }
-        } else {
-            $data['wholesale_info'] = $wholesale_direct ?: '';
-        }
-        
-        // If still empty or field ID, do a comprehensive search
-        if (empty($data['wholesale_info']) || preg_match('/^field_[a-f0-9]+$/', $data['wholesale_info'])) {
-            error_log("PDF Generation: No direct wholesale found, doing comprehensive search...");
-            
-            // Debug: Log ALL post meta fields
-            $all_meta = get_post_meta($post_id);
-            error_log("PDF Generation: All post meta fields: " . print_r(array_keys($all_meta), true));
-            
-            // Search post content
-            $post_content = get_post_field('post_content', $post_id);
-            if (!empty($post_content)) {
-                $extracted_content = $this->extract_wholesale_from_html($post_content);
-                if ($extracted_content) {
-                    $data['wholesale_info'] = $extracted_content;
-                    error_log("PDF Generation: Found wholesale in post_content");
-                }
-            }
-            
-            // Search all meta fields
-            if (empty($data['wholesale_info'])) {
-                foreach ($all_meta as $meta_key => $meta_value) {
-                    if (!empty($meta_value[0]) && is_string($meta_value[0]) && strlen($meta_value[0]) > 100) {
-                        if (stripos($meta_value[0], 'wholesale') !== false || stripos($meta_value[0], 'products available') !== false) {
-                            error_log("PDF Generation: Checking field '{$meta_key}' - contains wholesale keywords");
-                            $extracted_content = $this->extract_wholesale_from_html($meta_value[0]);
-                            if ($extracted_content) {
-                                $data['wholesale_info'] = $extracted_content;
-                                error_log("PDF Generation: Found wholesale content in field '{$meta_key}'");
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        
-        error_log("PDF Generation: Final wholesale_info result: " . (!empty($data['wholesale_info']) ? substr($data['wholesale_info'], 0, 200) . "... (length: " . strlen($data['wholesale_info']) . ")" : "EMPTY"));
-        
-        // Wholesale info is now handled with a static message in the template
-        $data['wholesale_info'] = 'static'; // Just a placeholder since we use static text
+        // Wholesale info is handled with a static message in the template
+        $data['wholesale_info'] = 'static';
         
         // Clean empty values
         foreach ($data as $key => $value) {
@@ -593,10 +506,21 @@ class SimpleListingPDFGenerator {
      * Build the universal HTML template - WORKING VERSION with images
      */
     private function build_html($data, $qr_code) {
-        error_log(print_r($data, true));
         
         // Content section with stacked layout
-        $about_content = !empty($data['about']) ? nl2br(esc_html(wp_trim_words($data['about'], 100))) : '<span style="color: #999; font-style: italic;">No information available</span>';
+        if (!empty($data['about'])) {
+            $full_about = $data['about'];
+            $truncated_about = wp_trim_words($full_about, 100);
+            
+            // Check if text was actually truncated
+            if (strlen($truncated_about) < strlen($full_about)) {
+                $about_content = nl2br(esc_html($truncated_about)) . ' Scan the QR code to learn more.';
+            } else {
+                $about_content = nl2br(esc_html($truncated_about));
+            }
+        } else {
+            $about_content = '<span style="color: #999; font-style: italic;">No information available</span>';
+        }
 
         if ($data['hero_image']) {
             $content_section = sprintf('
