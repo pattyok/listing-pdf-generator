@@ -42,6 +42,7 @@ class SimpleListingPDFGenerator {
             'csa_info' => 'listing_csa_info',
             'listing_features' => 'listing_features',
             'payment_methods' => 'listing_features',
+            'wholesale_info' => 'wholesale_info',
         );
     }
 
@@ -132,6 +133,12 @@ class SimpleListingPDFGenerator {
             } else {
                 $data[$key] = get_post_meta($post_id, $field_name, true) ?: '';
             }
+        }
+
+        // Try to extract wholesale information from various sources
+        $wholesale_content = $this->extract_wholesale_content($post_id);
+        if ($wholesale_content) {
+            $data['wholesale_info'] = $wholesale_content;
         }
 
         return $data;
@@ -334,6 +341,47 @@ class SimpleListingPDFGenerator {
 
 
     /**
+     * Extract wholesale content from various sources
+     */
+    private function extract_wholesale_content($post_id) {
+        // Try multiple potential field names for wholesale info
+        $wholesale_fields = array(
+            'wholesale_info',
+            'wholesale_details',
+            'wholesale_products',
+            'products_available_wholesale',
+            'wholesale_information'
+        );
+
+        foreach ($wholesale_fields as $field) {
+            $content = get_post_meta($post_id, $field, true);
+            if (!empty($content) && is_string($content)) {
+                return wp_strip_all_tags($content);
+            }
+        }
+
+        // Check post content for wholesale sections
+        $post_content = get_post_field('post_content', $post_id);
+        if (stripos($post_content, 'wholesale') !== false) {
+            // Try to extract wholesale-related content from post body
+            return $this->extract_wholesale_from_content($post_content);
+        }
+
+        return '';
+    }
+
+    /**
+     * Extract wholesale information from post content
+     */
+    private function extract_wholesale_from_content($content) {
+        // Look for wholesale sections in the content
+        if (preg_match('/wholesale[^.]*[.!]*/i', $content, $matches)) {
+            return wp_strip_all_tags($matches[0]);
+        }
+        return '';
+    }
+
+    /**
      * Generate QR code with base64 encoding
      */
     private function generate_qr_code($url) {
@@ -405,7 +453,7 @@ class SimpleListingPDFGenerator {
         $qr_code,
         $content_section,
         $this->build_products_section($data),
-        $this->build_wholesale_section(),
+        $this->build_wholesale_section($data),
         $this->build_growing_practices_section($data),
         esc_html($data['website'] ?: $data['url']),
         esc_html($data['url'])
@@ -508,8 +556,15 @@ class SimpleListingPDFGenerator {
     /**
      * Build wholesale section
      */
-    private function build_wholesale_section() {
-        return '<div class="section"><div class="section-title">Wholesale</div><div class="section-content">Contact us for wholesale products or scan the QR code for more details.</div></div>';
+    private function build_wholesale_section($data) {
+        $wholesale_content = !empty($data['wholesale_info']) ?
+            nl2br(esc_html($data['wholesale_info'])) :
+            'Contact us for wholesale products or scan the QR code for more details.';
+
+        return sprintf(
+            '<div class="section"><div class="section-title">Wholesale</div><div class="section-content">%s</div></div>',
+            $wholesale_content
+        );
     }
 
     /**
