@@ -362,8 +362,10 @@ class SimpleListingPDFGenerator {
 
         <table style="width: 100%%; background-color: #004D43; border-radius: 5px; margin-bottom: 4px;">
             <tr>
-                <td style="height: 80px; text-align: center; color: white; font-size: 18pt; font-weight: bold; line-height: 80px; vertical-align: middle;">
-                    %s
+                <td style="height: 80px; text-align: center; vertical-align: middle;">
+                    <div style="color: white; font-size: 18pt; font-weight: bold; line-height: 1.2;">
+                        %s
+                    </div>
                 </td>
             </tr>
         </table>
