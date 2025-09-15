@@ -500,8 +500,8 @@ class SimpleListingPDFGenerator {
                     </tr>
                 </table>
             </div>',
-            esc_url($data['hero_image']),
-            $about_content);
+            $about_content,
+            esc_url($data['hero_image']));
         }
 
         return sprintf('
