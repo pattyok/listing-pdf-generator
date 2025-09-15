@@ -435,9 +435,9 @@ class SimpleListingPDFGenerator {
             </tr>
         </table>
 
-        %s<br style="line-height: 0.5;">
-        %s<br style="line-height: 0.5;">
-        %s<br style="line-height: 0.5;">
+        %s<tcpdf method="Ln" params="3" />
+        %s<tcpdf method="Ln" params="3" />
+        %s<tcpdf method="Ln" params="3" />
         %s
 
         <div class="footer">
