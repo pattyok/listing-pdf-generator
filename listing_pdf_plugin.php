@@ -435,9 +435,9 @@ class SimpleListingPDFGenerator {
             </tr>
         </table>
 
-        %s
-        %s
-        %s
+        %s<br style="line-height: 0.5;">
+        %s<br style="line-height: 0.5;">
+        %s<br style="line-height: 0.5;">
         %s
 
         <div class="footer">
