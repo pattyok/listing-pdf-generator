@@ -445,7 +445,7 @@ class SimpleListingPDFGenerator {
                         </td>
                         <td style="width: 60%%; vertical-align: top; padding-left: 12px;">
                             <div class="section-title" style="margin-bottom: 6px;">About Us</div>
-                            <div class="section-content" style="text-align: justify; line-height: 1.3;">
+                            <div class="section-content" style="text-align: left; line-height: 1.3;">
                                 %s
                             </div>
                         </td>
