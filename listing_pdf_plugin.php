@@ -623,24 +623,15 @@ class SimpleListingPDFGenerator {
                 display: inline-block;
             }
 
-            .section {
-                margin: 2pt 0;
-                padding: 0;
-            }
-
             .section-title {
                 font-size: 12pt;
                 font-weight: bold;
                 color: #004D43;
-                margin-bottom: 2pt;
-                padding-bottom: 0;
             }
 
             .section-content {
                 font-size: 10pt;
                 line-height: 1.1;
-                margin-bottom: 4pt;
-                padding-bottom: 0;
             }
 
             .products-list {
