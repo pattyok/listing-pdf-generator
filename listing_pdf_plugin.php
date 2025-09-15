@@ -380,7 +380,7 @@ class SimpleListingPDFGenerator {
                 </td>
                 <td style="width: 35%%; vertical-align: top;">
                     <div style="text-align: center; padding: 8px;">
-                        <div class="qr-title">Scan for more details</div>
+                        <div style="font-size: 10pt; margin-bottom: 6px;">Scan for more details</div>
                         <img src="%s" style="width: 80px; height: 80px;" alt="QR Code">
                     </div>
                 </td>
