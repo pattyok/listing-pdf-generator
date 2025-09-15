@@ -486,9 +486,9 @@ class SimpleListingPDFGenerator {
             <div style="margin: 2pt 0;">
                 <table style="width: 100%%; border-collapse: collapse;">
                     <tr>
-                        <td style="width: 60%%; vertical-align: top; padding-right: 12px; text-align: left;">
-                            <div class="section-title" style="margin-bottom: 6px;">About Us</div>
-                            <div class="section-content" style="text-align: left; line-height: 1.3;">
+                        <td style="width: 60%%; vertical-align: top; padding-right: 12px; padding-left: 0; margin: 0;">
+                            <div style="font-size: 12pt; font-weight: bold; color: #004D43; margin: 0; padding: 0; text-align: left; margin-bottom: 6px;">About Us</div>
+                            <div style="font-size: 10pt; line-height: 1.3; margin: 0; padding: 0; text-align: left;">
                                 %s
                             </div>
                         </td>
