@@ -141,6 +141,12 @@ class SimpleListingPDFGenerator {
             $data['wholesale_info'] = $wholesale_content;
         }
 
+        // Generate simple location display if address is available
+        $address = $data['address'] ?: $data['location'] ?: '';
+        if (!empty($address)) {
+            $data['location_map'] = $this->create_simple_map_placeholder($address);
+        }
+
         return $data;
     }
 
@@ -382,6 +388,20 @@ class SimpleListingPDFGenerator {
     }
 
     /**
+     * Create a simple map placeholder for location display
+     */
+    private function create_simple_map_placeholder($address) {
+        return sprintf(
+            '<div style="border: 1px solid #ddd; padding: 8px; background-color: #f5f5f5; text-align: center; font-size: 9pt; margin-top: 6px;">
+                <strong>📍 Location</strong><br>
+                <span style="font-size: 8pt;">%s</span><br>
+                <span style="font-size: 7pt; color: #666;">View on map: openstreetmap.org</span>
+            </div>',
+            esc_html($address)
+        );
+    }
+
+    /**
      * Generate QR code with base64 encoding
      */
     private function generate_qr_code($url) {
@@ -534,6 +554,11 @@ class SimpleListingPDFGenerator {
                     esc_html($data[$field])
                 );
             }
+        }
+
+        // Add location map if available
+        if (!empty($data['location_map'])) {
+            $contact_html .= $data['location_map'];
         }
 
         return $contact_html;
