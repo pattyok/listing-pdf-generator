@@ -426,7 +426,7 @@ class SimpleListingPDFGenerator {
 %s
 
 <div class="section first-section">
-    <div style="font-family: museosans900, helvetica, Arial, sans-serif; font-size: 18pt; font-weight: bold; color: #004D43; margin-bottom: 0.03125in;">About Us</div>
+    <div style="font-family: museosans900, helvetica, Arial, sans-serif; font-size: 18pt; font-weight: bold; color: #004D43; margin-bottom: 0;">About Us</div>
     %s
 </div>
 
@@ -587,7 +587,7 @@ esc_html($data['url'])             // %s - Footer URL
         }
 
         return sprintf(
-            '<div class="section"><div style="font-family: museosans900, helvetica, Arial, sans-serif; font-size: 18pt; font-weight: bold; color: #004D43; margin-bottom: 0.03125in;">Products & Services</div><div class="section-content products-list">%s</div></div>',
+            '<div class="section"><div style="font-family: museosans900, helvetica, Arial, sans-serif; font-size: 18pt; font-weight: bold; color: #004D43; margin-bottom: 0;">Products & Services</div><div class="section-content products-list">%s</div></div>',
             $data['products']
         );
     }
@@ -601,7 +601,7 @@ esc_html($data['url'])             // %s - Footer URL
             'Contact us for wholesale products or scan the QR code for more details.';
 
         return sprintf(
-            '<div class="section"><div style="font-family: museosans900, helvetica, Arial, sans-serif; font-size: 18pt; font-weight: bold; color: #004D43; margin-bottom: 0.03125in;">Wholesale</div><div class="section-content">%s</div></div>',
+            '<div class="section"><div style="font-family: museosans900, helvetica, Arial, sans-serif; font-size: 18pt; font-weight: bold; color: #004D43; margin-bottom: 0;">Wholesale</div><div class="section-content">%s</div></div>',
             $wholesale_content
         );
     }
@@ -615,7 +615,7 @@ esc_html($data['url'])             // %s - Footer URL
         }
 
         return sprintf(
-            '<div class="section"><div style="font-family: museosans900, helvetica, Arial, sans-serif; font-size: 18pt; font-weight: bold; color: #004D43; margin-bottom: 0.03125in;">Growing Practices</div><div class="section-content">%s</div></div>',
+            '<div class="section"><div style="font-family: museosans900, helvetica, Arial, sans-serif; font-size: 18pt; font-weight: bold; color: #004D43; margin-bottom: 0;">Growing Practices</div><div class="section-content">%s</div></div>',
             nl2br(esc_html($data['growing_practices']))
         );
     }
