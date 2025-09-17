@@ -446,12 +446,15 @@ class SimpleListingPDFGenerator {
                         <div style="text-align: center; margin-bottom: 15px;">
                             <img src="%s" style="width: 72px; height: 72px;" alt="QR Code">
                         </div>
+                        <div style="margin-top: 15px;">
+                            %s
+                        </div>
                     </div>
                 </td>
                 <td style="width: 70%%; vertical-align: top; padding-left: 20px;">
-                    <!-- Placeholder for future About Us section -->
+                    <!-- Placeholder for About Us section -->
                     <div style="padding: 8px;">
-                        %s
+                        <!-- About Us content will go here in next task -->
                     </div>
                 </td>
             </tr>
