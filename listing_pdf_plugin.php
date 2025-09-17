@@ -331,14 +331,22 @@ class SimpleListingPDFGenerator {
      * Format product categories for display
      */
     private function format_product_categories($categories) {
-        $formatted_output = array();
+        $all_items = array();
 
+        // Collect all product items without category titles
         foreach ($categories as $category => $items) {
-            $items_text = implode(', ', $items);
-            $formatted_output[] = '<strong>' . $category . ':</strong> ' . $items_text;
+            // Filter out items that match the category name to prevent repetition
+            $filtered_items = array();
+            foreach ($items as $item) {
+                if (strcasecmp($item, $category) !== 0) {
+                    $filtered_items[] = $item;
+                }
+            }
+            $all_items = array_merge($all_items, $filtered_items);
         }
 
-        return implode('<br>', $formatted_output);
+        // Return just the product items, comma-separated
+        return implode(', ', $all_items);
     }
 
 
