@@ -141,11 +141,7 @@ class SimpleListingPDFGenerator {
             $data['wholesale_info'] = $wholesale_content;
         }
 
-        // Generate simple location display if address is available
-        $address = $data['address'] ?: $data['location'] ?: '';
-        if (!empty($address)) {
-            $data['location_map'] = $this->create_simple_map_placeholder($address);
-        }
+        // Location map section removed
 
         return $data;
     }
@@ -387,19 +383,6 @@ class SimpleListingPDFGenerator {
         return '';
     }
 
-    /**
-     * Create a simple map placeholder for location display
-     */
-    private function create_simple_map_placeholder($address) {
-        return sprintf(
-            '<div style="border: 1px solid #ddd; padding: 8px; background-color: #f5f5f5; text-align: center; font-size: 9pt; margin-top: 6px;">
-                <strong>📍 Location</strong><br>
-                <span style="font-size: 8pt;">%s</span><br>
-                <span style="font-size: 7pt; color: #666;">View on map: openstreetmap.org</span>
-            </div>',
-            esc_html($address)
-        );
-    }
 
     /**
      * Generate QR code with base64 encoding
@@ -498,9 +481,9 @@ esc_html($data['url'])             // %s - Footer URL
      */
     private function build_top_section($data, $qr_code) {
         $qr_section = sprintf('
-        <div style="text-align: center;">
+        <div style="text-align: left;">
             <div style="font-family: museosans900, helvetica, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #004D43; margin-bottom: 6px;">Visit Online</div>
-            <div style="text-align: center; margin-bottom: 10px;">
+            <div style="text-align: left; margin-bottom: 10px;">
                 <img src="%s" style="width: 72px; height: 72px;" alt="QR Code">
             </div>
         </div>',
@@ -573,10 +556,7 @@ esc_html($data['url'])             // %s - Footer URL
             }
         }
 
-        // Add location map if available
-        if (!empty($data['location_map'])) {
-            $contact_html .= $data['location_map'];
-        }
+        // Location map section removed
 
         return $contact_html;
     }
