@@ -440,15 +440,18 @@ class SimpleListingPDFGenerator {
 
         <table style="width: 100%%; border-collapse: collapse; margin: 4px 0;">
             <tr>
-                <td style="width: 65%%; vertical-align: top; padding-right: 20px;">
+                <td style="width: 30%%; vertical-align: top; padding-right: 20px;">
                     <div style="padding: 8px;">
-                        %s
+                        <div style="font-family: museosans900, helvetica, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #004D43; margin-bottom: 6px;">Visit Online</div>
+                        <div style="text-align: center; margin-bottom: 15px;">
+                            <img src="%s" style="width: 72px; height: 72px;" alt="QR Code">
+                        </div>
                     </div>
                 </td>
-                <td style="width: 35%%; vertical-align: top;">
-                    <div style="text-align: center; padding: 8px;">
-                        <div style="font-size: 10pt; margin-bottom: 6px;">Scan for more details</div>
-                        <img src="%s" style="width: 80px; height: 80px;" alt="QR Code">
+                <td style="width: 70%%; vertical-align: top; padding-left: 20px;">
+                    <!-- Placeholder for future About Us section -->
+                    <div style="padding: 8px;">
+                        %s
                     </div>
                 </td>
             </tr>
@@ -468,8 +471,8 @@ class SimpleListingPDFGenerator {
 
         $this->get_css_styles(),
         esc_html($data['name']),
-        $this->build_contact_info($data),
         $qr_code,
+        $this->build_contact_info($data),
         $content_section,
         $this->build_products_section($data),
         $this->build_wholesale_section($data),
