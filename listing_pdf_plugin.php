@@ -440,6 +440,8 @@ class SimpleListingPDFGenerator {
     </tr>
 </table>
 
+%s
+
 <table style="width: 100%%; border-collapse: collapse; margin: 4px 0;">
     <tr>
         <td style="width: 30%%; vertical-align: top; padding-right: 20px;">
@@ -478,9 +480,10 @@ class SimpleListingPDFGenerator {
 $this->get_css_styles(),           // %s - CSS styles
 esc_html($data['name']),           // %s - Business name
 esc_html($data['location'] ?: 'Location Not Available'), // %s - Location
+$this->build_top_image_section($data), // %s - Top image section
 $qr_code,                          // %s - QR code
 $this->build_contact_info($data),  // %s - Contact info
-$this->build_content_section($data, $about_content), // %s - About content with image
+$this->build_content_section($data, $about_content), // %s - About content
 $this->build_products_section($data), // %s - Products
 $this->build_wholesale_section($data), // %s - Wholesale
 $this->build_growing_practices_section($data), // %s - Growing practices
@@ -507,27 +510,31 @@ esc_html($data['url'])             // %s - Footer URL
     }
 
     /**
-     * Build content section with image
+     * Build top-right image section
      */
-    private function build_content_section($data, $about_content) {
-        if ($data['hero_image']) {
-            return sprintf('
-            <table style="width: 100%%; border-collapse: collapse; margin-bottom: 0.0625in;">
-                <tr>
-                    <td style="width: 70%%; vertical-align: top; padding-right: 0.3125in;">
-                        <div style="font-family: museosans500, helvetica, Arial, sans-serif; font-size: 10pt; line-height: 12pt; text-align: left;">
-                            %s
-                        </div>
-                    </td>
-                    <td style="width: 30%%; text-align: center; vertical-align: top;">
-                        <img src="%s" style="max-width: 2.25in; height: auto;" alt="Business Photo">
-                    </td>
-                </tr>
-            </table>',
-            $about_content,
-            esc_url($data['hero_image']));
+    private function build_top_image_section($data) {
+        if (!$data['hero_image']) {
+            return '';
         }
 
+        return sprintf('
+        <table style="width: 100%%; border-collapse: collapse; margin-bottom: 0.125in;">
+            <tr>
+                <td style="width: 70%%; vertical-align: top;">
+                    <!-- Empty space for content below -->
+                </td>
+                <td style="width: 30%%; text-align: center; vertical-align: top; padding-left: 0.125in;">
+                    <img src="%s" style="max-width: 2.25in; height: auto;" alt="Business Photo">
+                </td>
+            </tr>
+        </table>',
+        esc_url($data['hero_image']));
+    }
+
+    /**
+     * Build content section without image (image now positioned separately)
+     */
+    private function build_content_section($data, $about_content) {
         return sprintf('
         <div style="font-family: museosans500, helvetica, Arial, sans-serif; font-size: 10pt; line-height: 12pt; text-align: left;">
             %s
@@ -970,3 +977,4 @@ class CompleteListingPDFPlugin {
 // Initialize the plugin
 new CompleteListingPDFPlugin();
 ?>
+
