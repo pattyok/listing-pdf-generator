@@ -29,7 +29,7 @@ class SimpleListingPDFGenerator {
     public function __construct() {
         $this->field_map = array(
             'name' => 'post_title',
-            'location' => 'listing_location',
+            'location' => 'waff-item-taxonomy',
             'address' => 'location_address',
             'email' => 'email',
             'phone' => 'phone',
@@ -187,7 +187,7 @@ class SimpleListingPDFGenerator {
      */
     private function is_taxonomy($field_name) {
         return in_array($field_name, array(
-            'listing_type', 'listing_categories', 'listing_features'
+            'listing_type', 'listing_categories', 'listing_features', 'waff-item-taxonomy'
         ));
     }
 
