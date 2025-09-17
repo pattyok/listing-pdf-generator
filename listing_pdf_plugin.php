@@ -425,67 +425,70 @@ class SimpleListingPDFGenerator {
         $about_content = $this->format_about_content($data['about']);
 
         return sprintf('
-        %s
+%s
 
-        <table style="width: 100%%; background-color: #004D43; border-radius: 5px; margin-bottom: 4px;">
-            <tr>
-                <td style="height: 60px; text-align: center; vertical-align: middle;">
-                    <div style="color: white; font-size: 18pt; font-weight: bold; line-height: 1.2;">
-                        %s
-                    </div>
-                </td>
-            </tr>
-        </table>
-
-        <table style="width: 100%%; border-collapse: collapse; margin: 4px 0;">
-            <tr>
-                <td style="width: 30%%; vertical-align: top; padding-right: 20px;">
-                    <div style="padding: 8px;">
-                        <div style="font-family: museosans900, helvetica, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #004D43; margin-bottom: 6px;">Visit Online</div>
-                        <div style="text-align: center; margin-bottom: 15px;">
-                            <img src="%s" style="width: 72px; height: 72px;" alt="QR Code">
-                        </div>
-                        <div style="margin-top: 15px;">
-                            %s
-                        </div>
-                    </div>
-                </td>
-                <td style="width: 70%%; vertical-align: top;">
-                    <!-- Empty space for now -->
-                </td>
-            </tr>
-        </table>
-
-        <div style="margin: 0.3125in 0; padding: 0;">
-            <div style="font-family: museosans900, helvetica, Arial, sans-serif; font-size: 18pt; font-weight: bold; color: #004D43; margin-bottom: 0.0625in;">About Us</div>
-            <div style="font-family: museosans500, helvetica, Arial, sans-serif; font-size: 10pt; line-height: 12pt;">
+<table style="width: 100%%; background-color: #004D43; border-radius: 5px; margin-bottom: 4px;">
+    <tr>
+        <td style="height: 80px; text-align: center; vertical-align: middle;">
+            <div class="header-title" style="color: white; line-height: 1.2; margin-bottom: 4px;">
                 %s
             </div>
-        </div>
-
-        %s<tcpdf method="Ln" params="3" />
-        %s<tcpdf method="Ln" params="3" />
-        %s<tcpdf method="Ln" params="3" />
-        %s
-
-        <div class="footer">
-            <div class="website-url">%s</div>
-            <div style="margin-top: 10px; font-size: 8pt;">
-                Generated from %s
+            <div class="header-subtitle" style="color: white;">
+                %s
             </div>
-        </div>',
+        </td>
+    </tr>
+</table>
 
-        $this->get_css_styles(),
-        esc_html($data['name']),
-        $qr_code,
-        $this->build_contact_info($data),
-        $about_content,
-        $this->build_products_section($data),
-        $this->build_wholesale_section($data),
-        $this->build_growing_practices_section($data),
-        esc_html($data['website'] ?: $data['url']),
-        esc_html($data['url'])
-        );
+<table style="width: 100%%; border-collapse: collapse; margin: 4px 0;">
+    <tr>
+        <td style="width: 30%%; vertical-align: top; padding-right: 20px;">
+            <div style="padding: 8px;">
+                <div style="font-family: museosans900, helvetica, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #004D43; margin-bottom: 6px;">Visit Online</div>
+                <div style="text-align: center; margin-bottom: 15px;">
+                    <img src="%s" style="width: 72px; height: 72px;" alt="QR Code">
+                </div>
+                <div style="margin-top: 15px;">
+                    %s
+                </div>
+            </div>
+        </td>
+        <td style="width: 70%%; vertical-align: top;">
+            <!-- Empty for now -->
+        </td>
+    </tr>
+</table>
+
+<div style="margin: 0.3125in 0; padding: 0;">
+    <div style="font-family: museosans900, helvetica, Arial, sans-serif; font-size: 18pt; font-weight: bold; color: #004D43; margin-bottom: 0.0625in;">About Us</div>
+    <div style="font-family: museosans500, helvetica, Arial, sans-serif; font-size: 10pt; line-height: 12pt;">
+        %s
+    </div>
+</div>
+
+%s<tcpdf method="Ln" params="3" />
+%s<tcpdf method="Ln" params="3" />
+%s
+
+<div class="footer">
+    <div class="website-url">%s</div>
+    <div style="margin-top: 10px; font-size: 8pt;">
+        Generated from %s
+    </div>
+</div>',
+
+$this->get_css_styles(),           // %s - CSS styles
+esc_html($data['name']),           // %s - Business name
+esc_html($data['location'] ?: 'Location Not Available'), // %s - Location
+$qr_code,                          // %s - QR code
+$this->build_contact_info($data),  // %s - Contact info
+$about_content,                    // %s - About content (was content_section)
+$this->build_products_section($data), // %s - Products
+$this->build_wholesale_section($data), // %s - Wholesale
+$this->build_growing_practices_section($data), // %s - Growing practices
+esc_html($data['website'] ?: $data['url']), // %s - Footer website
+esc_html($data['url'])             // %s - Footer URL
+);
     }
 
     /**
