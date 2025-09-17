@@ -452,10 +452,7 @@ class SimpleListingPDFGenerator {
                     </div>
                 </td>
                 <td style="width: 70%%; vertical-align: top; padding-left: 20px;">
-                    <!-- Placeholder for About Us section -->
-                    <div style="padding: 8px;">
-                        <!-- About Us content will go here in next task -->
-                    </div>
+                    <!-- Ready for About Us full-width section -->
                 </td>
             </tr>
         </table>
@@ -924,7 +921,7 @@ class CompleteListingPDFPlugin {
             $filename = sanitize_file_name($post_title . '_listing.pdf');
 
             header('Content-Type: application/pdf');
-            header('Content-Disposition: attachment; filename="' . $filename . '"');
+            header('Content-Disposition: inline; filename="' . $filename . '"');
             header('Content-Length: ' . strlen($pdf_content));
             header('Cache-Control: private, max-age=0, must-revalidate');
             header('Pragma: public');
