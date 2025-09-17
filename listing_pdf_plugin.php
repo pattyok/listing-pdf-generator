@@ -331,9 +331,8 @@ class SimpleListingPDFGenerator {
      * Format product categories for display
      */
     private function format_product_categories($categories) {
-        $all_items = array();
+        $formatted_output = array();
 
-        // Collect all product items without category titles
         foreach ($categories as $category => $items) {
             // Filter out items that match the category name to prevent repetition
             $filtered_items = array();
@@ -342,11 +341,15 @@ class SimpleListingPDFGenerator {
                     $filtered_items[] = $item;
                 }
             }
-            $all_items = array_merge($all_items, $filtered_items);
+            
+            // Only display category if it has filtered items
+            if (!empty($filtered_items)) {
+                $items_text = implode(', ', $filtered_items);
+                $formatted_output[] = '<strong>' . $category . ':</strong> ' . $items_text;
+            }
         }
 
-        // Return just the product items, comma-separated
-        return implode(', ', $all_items);
+        return implode('<br>', $formatted_output);
     }
 
 
