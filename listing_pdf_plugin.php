@@ -74,7 +74,7 @@ class SimpleListingPDFGenerator {
      */
     private function output_sections_with_spacing($pdf, $data, $qr_code) {
         // Define spacing between sections (in mm)
-        $section_spacing = 5; // 5mm between sections
+        $section_spacing = 2; // 2mm between sections
         
         // Output CSS styles first
         $pdf->writeHTML($this->get_css_styles(), true, false, true, false, '');
@@ -439,7 +439,7 @@ class SimpleListingPDFGenerator {
             // Only display category if it has filtered items
             if (!empty($filtered_items)) {
                 $items_text = implode(', ', $filtered_items);
-                $formatted_output[] = '<div style="font-weight: bold; margin-bottom: 4px;">' . $category . ':</div><div style="margin-bottom: 8px;">' . $items_text . '</div>';
+                $formatted_output[] = '<div style="font-weight: bold; margin-bottom: 2px;">' . $category . ':</div><div style="margin-bottom: 4px;">' . $items_text . '</div>';
             }
         }
 
@@ -648,7 +648,7 @@ esc_html($data['url'])             // %s - Footer URL
                 }
 
                 $contact_html .= sprintf(
-                    '<div style="margin-bottom: 4px; font-size: 10pt;">
+                    '<div style="margin-bottom: 2px; font-size: 10pt;">
                         <span style="font-family: museosans700, helvetica, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #004D43; display: inline-block; width: 60px;">%s:</span>
                         <span style="font-family: museosans700, helvetica, Arial, sans-serif; font-size: 11pt;">%s</span>
                     </div>',
@@ -734,7 +734,7 @@ esc_html($data['url'])             // %s - Footer URL
             body {
                 font-family: helvetica, Arial, sans-serif;
                 font-size: 10pt;
-                line-height: 1.3;
+                line-height: 1.1;
                 color: #333;
                 margin: 0;
                 padding: 0;
