@@ -29,7 +29,6 @@ class SimpleListingPDFGenerator {
     public function __construct() {
         $this->field_map = array(
             'name' => 'post_title',
-            'location' => 'waff-item-taxonomy',
             'address' => 'location_address',
             'email' => 'email',
             'phone' => 'phone',
@@ -94,8 +93,8 @@ class SimpleListingPDFGenerator {
             </tr>
         </table>',
         esc_html($data['name']),
-        esc_html($data['location'] ?: 'Location Not Available'));
-        
+        esc_html($data['location']));
+
         $pdf->writeHTML($header_html, true, false, true, false, '');
         
         // Add spacing after header
@@ -208,6 +207,7 @@ class SimpleListingPDFGenerator {
      * Extract data for PDF generation
      */
     private function extract_data($post_id) {
+
         $post = get_post($post_id);
 
         $data = array(
@@ -235,7 +235,12 @@ class SimpleListingPDFGenerator {
             $data['wholesale_info'] = $wholesale_content;
         }
 
-        // Location map section removed
+        // Get location from address field
+		$address = $data['address'];
+		$data['location'] = '';
+		if ($address && isset($address['city']) && isset($address['state_short'])) {
+			$data['location'] = ucwords(strtolower($address['city'])) . ', ' . strtoupper($address['state_short']);
+		}
 
         return $data;
     }
@@ -333,12 +338,11 @@ class SimpleListingPDFGenerator {
         $categories = array();
 
         foreach ($products as $product) {
-            // Skip unwanted categories
-            if ($this->should_skip_product($product->name)) {
-                continue;
-            }
+            $category = $this->determine_product_category($product->parent);
 
-            $category = $this->determine_product_category($product->name);
+			if (!$category) {
+				continue;
+			}
 
             if (!isset($categories[$category])) {
                 $categories[$category] = array();
@@ -349,77 +353,31 @@ class SimpleListingPDFGenerator {
         return $this->format_product_categories($categories);
     }
 
-    /**
-     * Check if product should be skipped
-     */
-    private function should_skip_product($product_name) {
-        $skip_terms = array('locally raised', 'harvested', 'grown', 'services');
 
-        foreach ($skip_terms as $term) {
-            if (stripos($product_name, $term) !== false) {
-                return true;
-            }
-        }
+    /**
+     * Determine product category - only return parent categories we care about
+     */
+    private function determine_product_category($product_parent) {
+
+		$parent_categories = array(
+			2729 => 'Eggs',
+			240  => 'Flowers, Nursery & Trees',
+			1225 => 'Grains & Pulses',
+			2261 => 'Seeds & Starts',
+			221  => 'Meat & Poultry',
+			3887  => 'Dairy',
+			232  => 'Seafood',
+			1229 => 'Fruit & Berries',
+			133  => 'Vegetables & Herbs'
+		);
+
+        if (isset($parent_categories[$product_parent])) {
+			return $parent_categories[$product_parent];
+		}
 
         return false;
     }
 
-    /**
-     * Determine product category
-     */
-    private function determine_product_category($product_name) {
-        $product_lower = strtolower($product_name);
-
-        $category_patterns = array(
-            'Eggs' => array('egg'),
-            'Flowers, Nursery & Trees' => array('flower', 'nursery', 'tree'),
-            'Grains & Pulses' => array('grain', 'pulse', 'bean', 'wheat'),
-            'Seeds & Starts' => array('seed', 'start', 'plant'),
-            'Meat & Poultry' => array('meat', 'poultry', 'beef', 'chicken'),
-            'Dairy' => array('dairy', 'milk', 'cheese'),
-            'Seafood' => array('seafood', 'fish'),
-            'Fruit & Berries' => array('fruit', 'berr', 'apple'),
-        );
-
-        foreach ($category_patterns as $category => $patterns) {
-            foreach ($patterns as $pattern) {
-                if (stripos($product_lower, $pattern) !== false) {
-                    return $category;
-                }
-            }
-        }
-
-        // Check for vegetables
-        if ($this->is_vegetable($product_lower)) {
-            return 'Vegetables & Herbs';
-        }
-
-        return 'Other Products';
-    }
-
-    /**
-     * Check if product is a vegetable or herb
-     */
-    private function is_vegetable($product_lower) {
-        $vegetables = array(
-            'arugula', 'basil', 'beets', 'broccoli', 'cabbage', 'carrots', 'kale',
-            'lettuce', 'onions', 'potatoes', 'tomatoes', 'asian greens', 'bok choy',
-            'bell peppers', 'brussels sprouts', 'cauliflower', 'celeriac', 'chard',
-            'chives', 'collard greens', 'corn', 'cucumbers', 'daikon', 'dill',
-            'eggplant', 'escarole', 'garlic', 'herbs', 'kohlrabi', 'leeks',
-            'mustard greens', 'oregano', 'parsley', 'parsnips', 'peas', 'peppers',
-            'popcorn', 'pumpkins', 'radicchio', 'radishes', 'rhubarb', 'salad greens',
-            'shallots', 'spinach', 'squash', 'sunchokes', 'thyme', 'tomatillos', 'turnips'
-        );
-
-        foreach ($vegetables as $vegetable) {
-            if (stripos($product_lower, $vegetable) !== false) {
-                return true;
-            }
-        }
-
-        return false;
-    }
 
     /**
      * Format product categories for display
@@ -518,7 +476,7 @@ class SimpleListingPDFGenerator {
 <table style="width: 100%%; background-color: #004D43; border-radius: 5px; margin-bottom: 0;">
     <tr>
         <td style="height: 60px; text-align: center; vertical-align: middle; padding: 10px;">
-            <div class="header-title" style="color: white; line-height: 1.2; margin-bottom: 4px; font-size: 24pt; font-weight: bold;">
+            <div class="header-title" style="font-family: museosans900, helvetica, Arial, sans-serif; color: white; line-height: 1.2; margin-bottom: 4px; font-size: 24pt; font-weight: 900;">
                 %s
             </div>
             <div class="header-subtitle" style="color: white; font-size: 11pt;">
@@ -531,7 +489,7 @@ class SimpleListingPDFGenerator {
 %s
 
 <div class="section first-section">
-    <div style="font-family: museosans900, helvetica, Arial, sans-serif; font-size: 18pt; font-weight: bold; color: #004D43; margin-bottom: 0;">About Us</div>
+    <div style="font-family: museo-sans, helvetica, Arial, sans-serif; font-size: 18pt; font-weight: 900; color: #004D43; margin-bottom: 0;">About Us</div>
     %s
 </div>
 
@@ -548,7 +506,7 @@ class SimpleListingPDFGenerator {
 
 $this->get_css_styles(),           // %s - CSS styles
 esc_html($data['name']),           // %s - Business name
-esc_html($data['location'] ?: 'Location Not Available'), // %s - Location
+esc_html($data['location'] ?: ''), // %s - Location
 $this->build_top_section($data, $qr_code), // %s - Top section with QR and image
 $this->build_content_section($data, $about_content), // %s - About content
 $this->build_products_section($data), // %s - Products
@@ -897,44 +855,18 @@ class CompleteListingPDFPlugin {
 
             // Priority 1: Look for edit button locations
             var editSelectors = [
-                '.entry-meta .edit-link',
-                '.post-edit-link',
-                '.edit-post-link',
-                '.entry-footer .edit-link',
-                '.listing-actions',
-                '.post-actions',
-                '[class*="edit"]'
+                '.admin-links-actions',
             ];
 
             for (var i = 0; i < editSelectors.length && !inserted; i++) {
                 var editElement = $(editSelectors[i]);
                 if (editElement.length > 0) {
-                    editElement.last().after(pdfButton);
+                    editElement.append(pdfButton);
                     inserted = true;
                     break;
                 }
             }
 
-            // Priority 2: Fallback to content areas
-            if (!inserted) {
-                var contentSelectors = [
-                    '.entry-content',
-                    '.post-content',
-                    '.listing-content',
-                    'article .content',
-                    'main article',
-                    '.single-post article'
-                ];
-
-                for (var i = 0; i < contentSelectors.length && !inserted; i++) {
-                    var contentElement = $(contentSelectors[i]);
-                    if (contentElement.length > 0) {
-                        contentElement.last().after(pdfButton);
-                        inserted = true;
-                        break;
-                    }
-                }
-            }
 
             if (!inserted) {
                 $('footer').first().before(pdfButton);
@@ -978,31 +910,19 @@ class CompleteListingPDFPlugin {
     private function get_pdf_button_styles() {
         return "
         <style>
-            .pdf-generator-wrapper {
-                margin: 15px 0 !important;
-                padding: 15px;
-                background-color: #f9f9f9;
-                border: 1px solid #ddd;
-                border-radius: 5px;
-            }
+
 
             .pdf-generator-btn {
-                background: linear-gradient(135deg, #004D43 0%, #6AA338 100%);
+                background-color: #004D43;
                 color: white !important;
                 border: none;
-                padding: 10px 16px;
-                border-radius: 4px;
-                font-size: 14px;
-                font-weight: 600;
                 cursor: pointer;
                 transition: all 0.3s ease;
                 text-decoration: none !important;
             }
 
             .pdf-generator-btn:hover {
-                background: linear-gradient(135deg, #6AA338 0%, #004D43 100%);
-                transform: translateY(-1px);
-                box-shadow: 0 2px 8px rgba(0, 77, 67, 0.3);
+                background-color: #6AA338;
             }
 
             .pdf-generator-btn:disabled {
