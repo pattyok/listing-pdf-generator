@@ -662,7 +662,7 @@ esc_html($data['url'])             // %s - Footer URL
             }
 
             .section {
-                margin-top: 0.3125in;
+                margin-top: 0;
             }
 
             .first-section {
