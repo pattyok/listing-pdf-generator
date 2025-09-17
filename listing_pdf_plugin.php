@@ -74,7 +74,7 @@ class SimpleListingPDFGenerator {
      */
     private function output_sections_with_spacing($pdf, $data, $qr_code) {
         // Define spacing between sections (in mm)
-        $section_spacing = 2; // 2mm between sections
+        $section_spacing = 0; // 0mm between sections for maximum compactness
         
         // Output CSS styles first
         $pdf->writeHTML($this->get_css_styles(), true, false, true, false, '');
@@ -83,8 +83,8 @@ class SimpleListingPDFGenerator {
         $header_html = sprintf('
         <table style="width: 100%%; background-color: #004D43; border-radius: 5px; margin-bottom: 0;">
             <tr>
-                <td style="height: 60px; text-align: center; vertical-align: middle; padding: 10px;">
-                    <div class="header-title" style="color: white; line-height: 1.2; margin-bottom: 4px; font-size: 24pt; font-weight: bold;">
+                <td style="height: 45px; text-align: center; vertical-align: middle; padding: 5px;">
+                    <div class="header-title" style="color: white; line-height: 1.2; margin-bottom: 1px; font-size: 24pt; font-weight: bold;">
                         %s
                     </div>
                     <div class="header-subtitle" style="color: white; font-size: 11pt;">
@@ -582,8 +582,8 @@ esc_html($data['url'])             // %s - Footer URL
     private function build_top_section($data, $qr_code) {
         $qr_section = sprintf('
         <div style="text-align: left;">
-            <div style="font-family: museosans900, helvetica, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #004D43; margin-bottom: 6px;">Visit Online</div>
-            <div style="text-align: left; margin-bottom: 15px;">
+            <div style="font-family: museosans900, helvetica, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #004D43; margin-bottom: 2px;">Visit Online</div>
+            <div style="text-align: left; margin-bottom: 5px;">
                 <img src="%s" style="width: 72px; height: 72px;" alt="QR Code">
             </div>
             %s
