@@ -101,7 +101,7 @@ class SimpleListingPDFGenerator {
         $pdf->SetTitle($title . ' - Listing');
         $pdf->setPrintHeader(false);
         $pdf->setPrintFooter(false);
-        $pdf->SetMargins(15, 15, 15);
+        $pdf->SetMargins(10, 10, 10);
         $pdf->SetAutoPageBreak(TRUE, 15);
         $pdf->setCellHeightRatio(1.0);
         $pdf->SetLineWidth(0.1);
@@ -410,9 +410,9 @@ class SimpleListingPDFGenerator {
         return sprintf('
 %s
 
-<table style="width: 100%%; background-color: #004D43; border-radius: 5px; margin-bottom: 4px;">
+<table style="width: 100%%; background-color: #004D43; border-radius: 5px; margin-bottom: 0;">
     <tr>
-        <td style="height: 80px; text-align: center; vertical-align: middle;">
+        <td style="height: 60px; text-align: center; vertical-align: middle; padding: 10px;">
             <div class="header-title" style="color: white; line-height: 1.2; margin-bottom: 4px; font-size: 24pt; font-weight: bold;">
                 %s
             </div>
@@ -640,13 +640,10 @@ esc_html($data['url'])             // %s - Footer URL
                 font-weight: bold;
                 color: white;
                 background-color: #004D43;
-                margin-bottom: 4px;
+                margin-bottom: 0;
                 text-align: center;
-                padding-top: 40px;
-                padding-bottom: 40px;
-                padding-left: 20px;
-                padding-right: 20px;
-                min-height: 60px;
+                padding: 10px;
+                min-height: 40px;
                 border-radius: 5px;
             }
 
@@ -684,7 +681,7 @@ esc_html($data['url'])             // %s - Footer URL
             }
 
             .products-list {
-                padding: 6px;
+                padding: 0;
             }
 
             .qr-title {
