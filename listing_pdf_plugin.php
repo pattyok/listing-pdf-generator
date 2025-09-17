@@ -442,7 +442,6 @@ class SimpleListingPDFGenerator {
             <tr>
                 <td style="width: 65%%; vertical-align: top; padding-right: 20px;">
                     <div style="padding: 8px;">
-                        <div style="font-weight: bold; color: #004D43; margin-bottom: 6px;">Contact Information</div>
                         %s
                     </div>
                 </td>
