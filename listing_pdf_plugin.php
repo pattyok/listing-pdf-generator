@@ -550,10 +550,17 @@ class SimpleListingPDFGenerator {
         $contact_html = '';
         foreach ($contact_fields as $field => $label) {
             if (!empty($data[$field])) {
+                $display_value = $data[$field];
+
+                // Clean up website URLs to show only domain
+                if ($field === 'website') {
+                    $display_value = $this->clean_website_url($data[$field]);
+                }
+
                 $contact_html .= sprintf(
                     '<div class="contact-item"><span class="contact-label">%s:</span> %s</div>',
                     $label,
-                    esc_html($data[$field])
+                    esc_html($display_value)
                 );
             }
         }
@@ -564,6 +571,26 @@ class SimpleListingPDFGenerator {
         }
 
         return $contact_html;
+    }
+
+    /**
+     * Clean website URL for display (remove https://, www, trailing slash)
+     */
+    private function clean_website_url($url) {
+        if (empty($url)) {
+            return $url;
+        }
+
+        // Remove protocol
+        $clean_url = preg_replace('/^https?:\/\//', '', $url);
+
+        // Remove www.
+        $clean_url = preg_replace('/^www\./', '', $clean_url);
+
+        // Remove trailing slash
+        $clean_url = rtrim($clean_url, '/');
+
+        return $clean_url;
     }
 
     /**
