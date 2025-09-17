@@ -425,13 +425,13 @@ class SimpleListingPDFGenerator {
 
 %s
 
-<div style="margin: 0.3125in 0; padding: 0;">
-    <div style="font-family: museosans900, helvetica, Arial, sans-serif; font-size: 18pt; font-weight: bold; color: #004D43; margin-bottom: 0.0625in;">About Us</div>
+<div class="section">
+    <div style="font-family: museosans900, helvetica, Arial, sans-serif; font-size: 18pt; font-weight: bold; color: #004D43; margin-bottom: 0.03125in;">About Us</div>
     %s
 </div>
 
-%s<tcpdf method="Ln" params="3" />
-%s<tcpdf method="Ln" params="3" />
+%s
+%s
 %s
 
 <div class="footer">
@@ -496,7 +496,7 @@ esc_html($data['url'])             // %s - Footer URL
         }
 
         return sprintf('
-        <table style="width: 100%%; border-collapse: collapse; margin-bottom: 0.125in;">
+        <table style="width: 100%%; border-collapse: collapse; margin-bottom: 0;">
             <tr>
                 <td style="width: 50%%; vertical-align: top; padding-right: 0.125in;">
                     %s
@@ -587,7 +587,7 @@ esc_html($data['url'])             // %s - Footer URL
         }
 
         return sprintf(
-            '<div class="section"><div style="font-family: museosans900, helvetica, Arial, sans-serif; font-size: 18pt; font-weight: bold; color: #004D43; margin-bottom: 0.0625in;">Products & Services</div><div class="section-content products-list">%s</div></div>',
+            '<div class="section"><div style="font-family: museosans900, helvetica, Arial, sans-serif; font-size: 18pt; font-weight: bold; color: #004D43; margin-bottom: 0.03125in;">Products & Services</div><div class="section-content products-list">%s</div></div>',
             $data['products']
         );
     }
@@ -601,7 +601,7 @@ esc_html($data['url'])             // %s - Footer URL
             'Contact us for wholesale products or scan the QR code for more details.';
 
         return sprintf(
-            '<div class="section"><div style="font-family: museosans900, helvetica, Arial, sans-serif; font-size: 18pt; font-weight: bold; color: #004D43; margin-bottom: 0.0625in;">Wholesale</div><div class="section-content">%s</div></div>',
+            '<div class="section"><div style="font-family: museosans900, helvetica, Arial, sans-serif; font-size: 18pt; font-weight: bold; color: #004D43; margin-bottom: 0.03125in;">Wholesale</div><div class="section-content">%s</div></div>',
             $wholesale_content
         );
     }
@@ -615,7 +615,7 @@ esc_html($data['url'])             // %s - Footer URL
         }
 
         return sprintf(
-            '<div class="section"><div style="font-family: museosans900, helvetica, Arial, sans-serif; font-size: 18pt; font-weight: bold; color: #004D43; margin-bottom: 0.0625in;">Growing Practices</div><div class="section-content">%s</div></div>',
+            '<div class="section"><div style="font-family: museosans900, helvetica, Arial, sans-serif; font-size: 18pt; font-weight: bold; color: #004D43; margin-bottom: 0.03125in;">Growing Practices</div><div class="section-content">%s</div></div>',
             nl2br(esc_html($data['growing_practices']))
         );
     }
@@ -662,6 +662,10 @@ esc_html($data['url'])             // %s - Footer URL
                 color: #004D43;
                 width: 60px;
                 display: inline-block;
+            }
+
+            .section {
+                margin: 0.3125in 0;
             }
 
             .section-title {
