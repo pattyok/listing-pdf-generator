@@ -425,10 +425,6 @@ class SimpleListingPDFGenerator {
 
 %s
 
-<div style="margin: 0.125in 0; padding: 8px; background-color: #f8f9fa; border-radius: 5px;">
-    %s
-</div>
-
 <div style="margin: 0.3125in 0; padding: 0;">
     <div style="font-family: museosans900, helvetica, Arial, sans-serif; font-size: 18pt; font-weight: bold; color: #004D43; margin-bottom: 0.0625in;">About Us</div>
     %s
@@ -477,17 +473,19 @@ esc_html($data['url'])             // %s - Footer URL
     }
 
     /**
-     * Build top section with QR code on left and image on right
+     * Build top section with QR code and contact info on left, image on right
      */
     private function build_top_section($data, $qr_code) {
         $qr_section = sprintf('
         <div style="text-align: left;">
             <div style="font-family: museosans900, helvetica, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #004D43; margin-bottom: 6px;">Visit Online</div>
-            <div style="text-align: left; margin-bottom: 10px;">
+            <div style="text-align: left; margin-bottom: 15px;">
                 <img src="%s" style="width: 72px; height: 72px;" alt="QR Code">
             </div>
+            %s
         </div>',
-        $qr_code);
+        $qr_code,
+        $this->build_contact_info($data));
 
         $image_section = '';
         if ($data['hero_image']) {
@@ -518,7 +516,7 @@ esc_html($data['url'])             // %s - Footer URL
      */
     private function build_content_section($data, $about_content) {
         return sprintf('
-        <div style="font-family: museosans500, helvetica, Arial, sans-serif; font-size: 10pt; line-height: 12pt; text-align: left;">
+        <div style="font-family: museosans500, helvetica, Arial, sans-serif; font-size: 10pt; line-height: 12pt; text-align: left; margin: 0; padding: 0;">
             %s
         </div>',
         $about_content);
