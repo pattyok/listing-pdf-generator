@@ -490,7 +490,7 @@ esc_html($data['url'])             // %s - Footer URL
         if ($data['hero_image']) {
             $image_section = sprintf('
             <div style="text-align: center;">
-                <img src="%s" style="max-width: 2.25in; height: auto;" alt="Business Photo">
+                <img src="%s" style="max-width: 2.25in; max-height: 1.7in; height: auto;" alt="Business Photo">
             </div>',
             esc_url($data['hero_image']));
         }
