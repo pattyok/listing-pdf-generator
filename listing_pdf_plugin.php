@@ -425,7 +425,7 @@ class SimpleListingPDFGenerator {
 
 %s
 
-<div class="section">
+<div class="section first-section">
     <div style="font-family: museosans900, helvetica, Arial, sans-serif; font-size: 18pt; font-weight: bold; color: #004D43; margin-bottom: 0.03125in;">About Us</div>
     %s
 </div>
@@ -665,7 +665,11 @@ esc_html($data['url'])             // %s - Footer URL
             }
 
             .section {
-                margin: 0.3125in 0;
+                margin-top: 0.3125in;
+            }
+
+            .first-section {
+                margin-top: 0;
             }
 
             .section-title {
