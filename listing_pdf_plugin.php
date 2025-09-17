@@ -57,8 +57,9 @@ class SimpleListingPDFGenerator {
             $this->load_tcpdf();
 
             $pdf = $this->create_pdf_instance($data['name']);
-            $html = $this->build_html($data, $qr_code);
-            $pdf->writeHTML($html, true, false, true, false, '');
+            
+            // Output sections with SetY() spacing control
+            $this->output_sections_with_spacing($pdf, $data, $qr_code);
 
             return $pdf->Output('', 'S');
 
@@ -66,6 +67,99 @@ class SimpleListingPDFGenerator {
             error_log('PDF Generation Error: ' . $e->getMessage());
             return false;
         }
+    }
+
+    /**
+     * Output sections with SetY() spacing control
+     */
+    private function output_sections_with_spacing($pdf, $data, $qr_code) {
+        // Define spacing between sections (in mm)
+        $section_spacing = 5; // 5mm between sections
+        
+        // Output CSS styles first
+        $pdf->writeHTML($this->get_css_styles(), true, false, true, false, '');
+        
+        // Output header
+        $header_html = sprintf('
+        <table style="width: 100%%; background-color: #004D43; border-radius: 5px; margin-bottom: 0;">
+            <tr>
+                <td style="height: 60px; text-align: center; vertical-align: middle; padding: 10px;">
+                    <div class="header-title" style="color: white; line-height: 1.2; margin-bottom: 4px; font-size: 24pt; font-weight: bold;">
+                        %s
+                    </div>
+                    <div class="header-subtitle" style="color: white; font-size: 11pt;">
+                        %s
+                    </div>
+                </td>
+            </tr>
+        </table>',
+        esc_html($data['name']),
+        esc_html($data['location'] ?: 'Location Not Available'));
+        
+        $pdf->writeHTML($header_html, true, false, true, false, '');
+        
+        // Add spacing after header
+        $currentY = $pdf->GetY();
+        $pdf->SetY($currentY + $section_spacing);
+        
+        // Output top section (QR + image)
+        $pdf->writeHTML($this->build_top_section($data, $qr_code), true, false, true, false, '');
+        
+        // Add spacing after top section
+        $currentY = $pdf->GetY();
+        $pdf->SetY($currentY + $section_spacing);
+        
+        // Output About Us section
+        $about_content = $this->format_about_content($data['about']);
+        $about_html = sprintf('
+        <div class="section first-section">
+            <div style="font-family: museosans900, helvetica, Arial, sans-serif; font-size: 18pt; font-weight: bold; color: #004D43; margin-bottom: 0;">About Us</div>
+            %s
+        </div>',
+        $this->build_content_section($data, $about_content));
+        
+        $pdf->writeHTML($about_html, true, false, true, false, '');
+        
+        // Add spacing after About Us
+        $currentY = $pdf->GetY();
+        $pdf->SetY($currentY + $section_spacing);
+        
+        // Output Products section
+        $products_html = $this->build_products_section($data);
+        if ($products_html) {
+            $pdf->writeHTML($products_html, true, false, true, false, '');
+            $currentY = $pdf->GetY();
+            $pdf->SetY($currentY + $section_spacing);
+        }
+        
+        // Output Wholesale section
+        $wholesale_html = $this->build_wholesale_section($data);
+        if ($wholesale_html) {
+            $pdf->writeHTML($wholesale_html, true, false, true, false, '');
+            $currentY = $pdf->GetY();
+            $pdf->SetY($currentY + $section_spacing);
+        }
+        
+        // Output Growing Practices section
+        $growing_html = $this->build_growing_practices_section($data);
+        if ($growing_html) {
+            $pdf->writeHTML($growing_html, true, false, true, false, '');
+            $currentY = $pdf->GetY();
+            $pdf->SetY($currentY + $section_spacing);
+        }
+        
+        // Output footer
+        $footer_html = sprintf('
+        <div class="footer">
+            <div class="website-url">%s</div>
+            <div style="margin-top: 10px; font-size: 8pt;">
+                Generated from %s
+            </div>
+        </div>',
+        esc_html($data['website'] ?: $data['url']),
+        esc_html($data['url']));
+        
+        $pdf->writeHTML($footer_html, true, false, true, false, '');
     }
 
     /**
