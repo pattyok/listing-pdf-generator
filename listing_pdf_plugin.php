@@ -442,24 +442,9 @@ class SimpleListingPDFGenerator {
 
 %s
 
-<table style="width: 100%%; border-collapse: collapse; margin: 4px 0;">
-    <tr>
-        <td style="width: 30%%; vertical-align: top; padding-right: 20px;">
-            <div style="padding: 8px;">
-                <div style="font-family: museosans900, helvetica, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #004D43; margin-bottom: 6px;">Visit Online</div>
-                <div style="text-align: center; margin-bottom: 15px;">
-                    <img src="%s" style="width: 72px; height: 72px;" alt="QR Code">
-                </div>
-                <div style="margin-top: 15px;">
-                    %s
-                </div>
-            </div>
-        </td>
-        <td style="width: 70%%; vertical-align: top;">
-            <!-- Empty for now -->
-        </td>
-    </tr>
-</table>
+<div style="margin: 0.125in 0; padding: 8px; background-color: #f8f9fa; border-radius: 5px;">
+    %s
+</div>
 
 <div style="margin: 0.3125in 0; padding: 0;">
     <div style="font-family: museosans900, helvetica, Arial, sans-serif; font-size: 18pt; font-weight: bold; color: #004D43; margin-bottom: 0.0625in;">About Us</div>
@@ -480,8 +465,7 @@ class SimpleListingPDFGenerator {
 $this->get_css_styles(),           // %s - CSS styles
 esc_html($data['name']),           // %s - Business name
 esc_html($data['location'] ?: 'Location Not Available'), // %s - Location
-$this->build_top_image_section($data), // %s - Top image section
-$qr_code,                          // %s - QR code
+$this->build_top_section($data, $qr_code), // %s - Top section with QR and image
 $this->build_contact_info($data),  // %s - Contact info
 $this->build_content_section($data, $about_content), // %s - About content
 $this->build_products_section($data), // %s - Products
@@ -510,25 +494,40 @@ esc_html($data['url'])             // %s - Footer URL
     }
 
     /**
-     * Build top-right image section
+     * Build top section with QR code on left and image on right
      */
-    private function build_top_image_section($data) {
-        if (!$data['hero_image']) {
-            return '';
+    private function build_top_section($data, $qr_code) {
+        $qr_section = sprintf('
+        <div style="text-align: center;">
+            <div style="font-family: museosans900, helvetica, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #004D43; margin-bottom: 6px;">Visit Online</div>
+            <div style="text-align: center; margin-bottom: 10px;">
+                <img src="%s" style="width: 72px; height: 72px;" alt="QR Code">
+            </div>
+        </div>',
+        $qr_code);
+
+        $image_section = '';
+        if ($data['hero_image']) {
+            $image_section = sprintf('
+            <div style="text-align: center;">
+                <img src="%s" style="max-width: 2.25in; height: auto;" alt="Business Photo">
+            </div>',
+            esc_url($data['hero_image']));
         }
 
         return sprintf('
         <table style="width: 100%%; border-collapse: collapse; margin-bottom: 0.125in;">
             <tr>
-                <td style="width: 70%%; vertical-align: top;">
-                    <!-- Empty space for content below -->
+                <td style="width: 50%%; vertical-align: top; padding-right: 0.125in;">
+                    %s
                 </td>
-                <td style="width: 30%%; text-align: center; vertical-align: top; padding-left: 0.125in;">
-                    <img src="%s" style="max-width: 2.25in; height: auto;" alt="Business Photo">
+                <td style="width: 50%%; vertical-align: top; padding-left: 0.125in;">
+                    %s
                 </td>
             </tr>
         </table>',
-        esc_url($data['hero_image']));
+        $qr_section,
+        $image_section);
     }
 
     /**
