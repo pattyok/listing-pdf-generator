@@ -461,9 +461,7 @@ class SimpleListingPDFGenerator {
 
 <div style="margin: 0.3125in 0; padding: 0;">
     <div style="font-family: museosans900, helvetica, Arial, sans-serif; font-size: 18pt; font-weight: bold; color: #004D43; margin-bottom: 0.0625in;">About Us</div>
-    <div style="font-family: museosans500, helvetica, Arial, sans-serif; font-size: 10pt; line-height: 12pt;">
-        %s
-    </div>
+    %s
 </div>
 
 %s<tcpdf method="Ln" params="3" />
@@ -482,7 +480,7 @@ esc_html($data['name']),           // %s - Business name
 esc_html($data['location'] ?: 'Location Not Available'), // %s - Location
 $qr_code,                          // %s - QR code
 $this->build_contact_info($data),  // %s - Contact info
-$about_content,                    // %s - About content (was content_section)
+$this->build_content_section($data, $about_content), // %s - About content with image
 $this->build_products_section($data), // %s - Products
 $this->build_wholesale_section($data), // %s - Wholesale
 $this->build_growing_practices_section($data), // %s - Growing practices
@@ -514,33 +512,25 @@ esc_html($data['url'])             // %s - Footer URL
     private function build_content_section($data, $about_content) {
         if ($data['hero_image']) {
             return sprintf('
-            <div style="margin: 2pt 0;">
-                <table style="width: 100%%; border-collapse: collapse;">
-                    <tr>
-                        <td style="width: 60%%; vertical-align: top; padding-right: 12px; padding-left: 0; margin: 0;">
-                            <div style="font-size: 12pt; font-weight: bold; color: #004D43; margin: 0; padding: 0; text-align: left; margin-bottom: 6px;">About Us</div>
-                            <div style="font-size: 10pt; line-height: 1.3; margin: 0; padding: 0; text-align: left;">
-                                %s
-                            </div>
-                        </td>
-                        <td style="width: 40%%; text-align: center; padding-left: 12px; vertical-align: top;">
-                            <div style="padding-top: 25px;">
-                                <img src="%s" width="150" height="120" alt="Business Photo">
-                            </div>
-                        </td>
-                    </tr>
-                </table>
-            </div>',
+            <table style="width: 100%%; border-collapse: collapse; margin-bottom: 0.0625in;">
+                <tr>
+                    <td style="width: 70%%; vertical-align: top; padding-right: 0.3125in;">
+                        <div style="font-family: museosans500, helvetica, Arial, sans-serif; font-size: 10pt; line-height: 12pt; text-align: left;">
+                            %s
+                        </div>
+                    </td>
+                    <td style="width: 30%%; text-align: center; vertical-align: top;">
+                        <img src="%s" style="max-width: 2.25in; height: auto;" alt="Business Photo">
+                    </td>
+                </tr>
+            </table>',
             $about_content,
             esc_url($data['hero_image']));
         }
 
         return sprintf('
-        <div style="margin: 2pt 0;">
-            <div class="section-title">About Us</div>
-            <div class="section-content" style="text-align: left; line-height: 1.3;">
-                %s
-            </div>
+        <div style="font-family: museosans500, helvetica, Arial, sans-serif; font-size: 10pt; line-height: 12pt; text-align: left;">
+            %s
         </div>',
         $about_content);
     }
