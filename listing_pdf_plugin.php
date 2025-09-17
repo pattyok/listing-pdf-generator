@@ -445,7 +445,6 @@ $this->get_css_styles(),           // %s - CSS styles
 esc_html($data['name']),           // %s - Business name
 esc_html($data['location'] ?: 'Location Not Available'), // %s - Location
 $this->build_top_section($data, $qr_code), // %s - Top section with QR and image
-$this->build_contact_info($data),  // %s - Contact info
 $this->build_content_section($data, $about_content), // %s - About content
 $this->build_products_section($data), // %s - Products
 $this->build_wholesale_section($data), // %s - Wholesale
