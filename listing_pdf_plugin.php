@@ -558,7 +558,10 @@ class SimpleListingPDFGenerator {
                 }
 
                 $contact_html .= sprintf(
-                    '<div class="contact-item"><span class="contact-label">%s:</span> %s</div>',
+                    '<div style="margin-bottom: 4px; font-size: 10pt;">
+                        <span style="font-family: museosans700, helvetica, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #004D43; display: inline-block; width: 60px;">%s:</span>
+                        <span style="font-family: museosans700, helvetica, Arial, sans-serif; font-size: 11pt;">%s</span>
+                    </div>',
                     $label,
                     esc_html($display_value)
                 );
@@ -671,6 +674,8 @@ class SimpleListingPDFGenerator {
             }
 
             .contact-label {
+                font-family: museosans700, helvetica, Arial, sans-serif;
+                font-size: 11pt;
                 font-weight: bold;
                 color: #004D43;
                 width: 60px;
