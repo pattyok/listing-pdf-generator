@@ -423,7 +423,6 @@ class SimpleListingPDFGenerator {
      */
     private function build_html($data, $qr_code) {
         $about_content = $this->format_about_content($data['about']);
-        $content_section = $this->build_content_section($data, $about_content);
 
         return sprintf('
         %s
@@ -451,11 +450,18 @@ class SimpleListingPDFGenerator {
                         </div>
                     </div>
                 </td>
-                <td style="width: 70%%; vertical-align: top; padding-left: 20px;">
-                    <!-- Ready for About Us full-width section -->
+                <td style="width: 70%%; vertical-align: top;">
+                    <!-- Empty space for now -->
                 </td>
             </tr>
         </table>
+
+        <div style="margin: 0.3125in 0; padding: 0;">
+            <div style="font-family: museosans900, helvetica, Arial, sans-serif; font-size: 18pt; font-weight: bold; color: #004D43; margin-bottom: 0.0625in;">About Us</div>
+            <div style="font-family: museosans500, helvetica, Arial, sans-serif; font-size: 10pt; line-height: 12pt;">
+                %s
+            </div>
+        </div>
 
         %s<tcpdf method="Ln" params="3" />
         %s<tcpdf method="Ln" params="3" />
@@ -473,7 +479,7 @@ class SimpleListingPDFGenerator {
         esc_html($data['name']),
         $qr_code,
         $this->build_contact_info($data),
-        $content_section,
+        $about_content,
         $this->build_products_section($data),
         $this->build_wholesale_section($data),
         $this->build_growing_practices_section($data),
