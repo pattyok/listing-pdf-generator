@@ -345,7 +345,7 @@ class SimpleListingPDFGenerator {
             // Only display category if it has filtered items
             if (!empty($filtered_items)) {
                 $items_text = implode(', ', $filtered_items);
-                $formatted_output[] = '<strong>' . $category . ':</strong> ' . $items_text;
+                $formatted_output[] = '<div style="font-weight: bold; margin-bottom: 4px;">' . $category . ':</div><div style="margin-bottom: 8px;">' . $items_text . '</div>';
             }
         }
 
