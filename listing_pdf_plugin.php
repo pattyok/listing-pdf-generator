@@ -83,10 +83,10 @@ class SimpleListingPDFGenerator {
         <table style="width: 100%%; background-color: #004D43; border-radius: 5px; margin-bottom: 0;">
             <tr>
                 <td style="height: 45px; text-align: center; vertical-align: middle; padding: 5px;">
-                    <div class="header-title" style="color: white; line-height: 1.2; margin-bottom: 1px; font-size: 24pt; font-weight: bold;">
+                    <div class="header-title" style="color: white; line-height: 1.2; margin-bottom: 0px; font-size: 24pt; font-weight: bold;">
                         %s
                     </div>
-                    <div class="header-subtitle" style="color: white; font-size: 11pt;">
+                    <div class="header-subtitle" style="color: white; font-size: 11pt; font-weight: bold; margin-top: 0px;">
                         %s
                     </div>
                 </td>
@@ -150,12 +150,14 @@ class SimpleListingPDFGenerator {
         // Output footer
         $footer_html = sprintf('
         <div class="footer">
-            <div class="website-url">%s</div>
-            <div style="margin-top: 10px; font-size: 8pt;">
+            <div style="margin-bottom: 5px;">
+                <img src="%s" style="height: 20px; width: auto;" alt="Eat Local First">
+            </div>
+            <div style="font-size: 8pt;">
                 Generated from %s
             </div>
         </div>',
-        esc_html($data['website'] ?: $data['url']),
+        plugin_dir_url(__FILE__) . 'eat-local-first-logo.png',
         esc_html($data['url']));
         
         $pdf->writeHTML($footer_html, true, false, true, false, '');
