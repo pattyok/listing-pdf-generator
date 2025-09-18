@@ -86,7 +86,7 @@ class SimpleListingPDFGenerator {
                     <div class="header-title" style="color: white; line-height: 1.2; margin-bottom: 0px; font-size: 24pt; font-weight: bold;">
                         %s
                     </div>
-                    <div class="header-subtitle" style="color: white; font-size: 11pt; font-weight: bold; margin-top: -4px;">
+                    <div class="header-subtitle" style="color: white; font-size: 11pt; font-weight: bold; margin-top: -8px;">
                         %s
                     </div>
                 </td>
