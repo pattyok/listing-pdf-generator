@@ -577,10 +577,7 @@ esc_html($data['url'])             // %s - Footer URL
      * Build content section without image (image now positioned separately)
      */
     private function build_content_section($data, $about_content) {
-        return sprintf('
-        <div style="font-family: museosans500, helvetica, Arial, sans-serif; font-size: 10pt; line-height: 12pt; text-align: left; margin: 0; padding: 0;">
-            %s
-        </div>',
+        return sprintf('<div style="font-family: museosans500, helvetica, Arial, sans-serif; font-size: 10pt; line-height: 12pt; text-align: left; margin: 0; padding: 0;">%s</div>',
         $about_content);
     }
 
