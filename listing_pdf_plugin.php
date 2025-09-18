@@ -82,7 +82,7 @@ class SimpleListingPDFGenerator {
         $header_html = sprintf('
         <table style="width: 100%%; background-color: #004D43; border-radius: 5px; margin-bottom: 0;">
             <tr>
-                <td style="height: 45px; text-align: center; vertical-align: middle; padding: 5px;">
+                <td style="height: 65px; text-align: center; vertical-align: middle; padding: 5px;">
                     <div class="header-title" style="color: white; line-height: 1.2; margin-bottom: 0px; font-size: 24pt; font-weight: bold;">
                         %s
                     </div>
@@ -150,11 +150,9 @@ class SimpleListingPDFGenerator {
         // Output footer
         $footer_html = sprintf('
         <div class="footer">
-            <div style="margin-bottom: 5px;">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
                 <img src="%s" style="height: 20px; width: auto;" alt="Eat Local First">
-            </div>
-            <div style="font-size: 8pt;">
-                Generated from %s
+                <span style="font-size: 8pt;">Generated from %s</span>
             </div>
         </div>',
         plugin_dir_url(__FILE__) . 'eat-local-first-logo.png',
@@ -399,7 +397,7 @@ class SimpleListingPDFGenerator {
             // Only display category if it has filtered items
             if (!empty($filtered_items)) {
                 $items_text = implode(', ', $filtered_items);
-                $formatted_output[] = '<div style="font-weight: bold; margin-bottom: 2px;">' . $category . ':</div><div style="margin-bottom: 4px;">' . $items_text . '</div>';
+                $formatted_output[] = '<div style="font-weight: bold; margin-bottom: 1px;">' . $category . ':</div><div style="margin-bottom: 2px;">' . $items_text . '</div>';
             }
         }
 
