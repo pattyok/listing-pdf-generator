@@ -788,7 +788,10 @@ class CompleteListingPDFPlugin {
         add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
         add_action('wp_ajax_generate_listing_pdf', array($this, 'handle_pdf_generation'));
         add_action('wp_ajax_nopriv_generate_listing_pdf', array($this, 'handle_pdf_generation'));
-        add_action('wp_footer', array($this, 'add_pdf_button_via_javascript'));
+		// Add button via filter on listing page
+		add_filter('listing_footer_actions', array($this, 'add_pdf_button'));
+		// Add button javascript to footer
+        //add_action('wp_footer', array($this, 'add_pdf_button_javascript'));
     }
 
     /**
@@ -832,8 +835,8 @@ class CompleteListingPDFPlugin {
     /**
      * Add PDF button via JavaScript
      */
-    public function add_pdf_button_via_javascript() {
-        if (!is_singular() || !$this->is_listing_post_type() || !$this->user_can_generate_pdf()) {
+    public function add_pdf_button() {
+        if (!$this->user_can_generate_pdf()) {
             return;
         }
 
@@ -841,64 +844,41 @@ class CompleteListingPDFPlugin {
         $nonce = wp_create_nonce('generate_pdf_nonce');
         $ajax_url = admin_url('admin-ajax.php');
 
-        echo $this->get_pdf_button_styles();
-        ?>
-        <script type="text/javascript">
-        jQuery(document).ready(function($) {
-            var pdfButton = $('<div class="pdf-generator-wrapper"><button type="button" id="generate-pdf-btn" class="pdf-generator-btn" data-post-id="<?php echo esc_js($post_id); ?>">📄 Download PDF</button></div>');
+		$button = $this->get_pdf_button_styles();
+        $button .= '<div class="pdf-generator-wrapper"><button type="button" id="generate-pdf-btn" class="pdf-generator-btn" data-post-id="' . esc_js($post_id) . '">📄 Download PDF</button></div>';
+		$button .= '<script type="text/javascript">
+			jQuery(document).ready(function($) {
 
-            // Try to place button next to edit button first, then fallback locations
-            var inserted = false;
+				// Handle button click
+				$(document).on("click", "#generate-pdf-btn", function(e) {
+					e.preventDefault();
 
-            // Priority 1: Look for edit button locations
-            var editSelectors = [
-                '.admin-links-actions',
-            ];
+					var button = $(this);
+					var originalText = button.text();
 
-            for (var i = 0; i < editSelectors.length && !inserted; i++) {
-                var editElement = $(editSelectors[i]);
-                if (editElement.length > 0) {
-                    editElement.append(pdfButton);
-                    inserted = true;
-                    break;
-                }
-            }
+					button.prop("disabled", true).text("Generating...");
 
+					var form = $("<form>", {
+						method: "POST",
+						action: "' . $ajax_url . '",
+						target: "_blank"
+					});
 
-            if (!inserted) {
-                $('footer').first().before(pdfButton);
-            }
+					form.append($("<input>", { type: "hidden", name: "action", value: "generate_listing_pdf" }));
+					form.append($("<input>", { type: "hidden", name: "post_id", value: "' . $post_id . '" }));
+					form.append($("<input>", { type: "hidden", name: "nonce", value: "' . $nonce . '" }));
 
-            // Handle button click
-            $(document).on('click', '#generate-pdf-btn', function(e) {
-                e.preventDefault();
+					$("body").append(form);
+					form.submit();
+					form.remove();
 
-                var button = $(this);
-                var originalText = button.text();
-
-                button.prop('disabled', true).text('Generating...');
-
-                var form = $('<form>', {
-                    method: 'POST',
-                    action: '<?php echo $ajax_url; ?>',
-                    target: '_blank'
-                });
-
-                form.append($('<input>', { type: 'hidden', name: 'action', value: 'generate_listing_pdf' }));
-                form.append($('<input>', { type: 'hidden', name: 'post_id', value: '<?php echo $post_id; ?>' }));
-                form.append($('<input>', { type: 'hidden', name: 'nonce', value: '<?php echo $nonce; ?>' }));
-
-                $('body').append(form);
-                form.submit();
-                form.remove();
-
-                setTimeout(function() {
-                    button.prop('disabled', false).text(originalText);
-                }, 2000);
-            });
-        });
-        </script>
-        <?php
+					setTimeout(function() {
+						button.prop("disabled", false).text(originalText);
+					}, 2000);
+				});
+			});
+        </script>';
+		return $button;
     }
 
     /**
