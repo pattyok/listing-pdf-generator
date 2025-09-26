@@ -82,11 +82,11 @@ class SimpleListingPDFGenerator {
         $header_html = sprintf('
         <table style="width: 100%%; background-color: #004D43; border-radius: 5px; margin-bottom: 0;">
             <tr>
-                <td style="height: 45px; text-align: center; vertical-align: middle; padding: 5px;">
-                    <div class="header-title" style="color: white; line-height: 1.2; margin-bottom: 1px; font-size: 24pt; font-weight: bold;">
+                <td style="height: 65px; text-align: center; vertical-align: middle; padding: 5px;">
+                    <div class="header-title" style="color: white; line-height: 1.0; margin-bottom: 0px; font-size: 24pt; font-weight: bold;">
                         %s
                     </div>
-                    <div class="header-subtitle" style="color: white; font-size: 11pt;">
+                    <div class="header-subtitle" style="color: white; font-size: 11pt; font-weight: bold; margin-top: -12px;">
                         %s
                     </div>
                 </td>
@@ -150,12 +150,12 @@ class SimpleListingPDFGenerator {
         // Output footer
         $footer_html = sprintf('
         <div class="footer">
-            <div class="website-url">%s</div>
-            <div style="margin-top: 10px; font-size: 8pt;">
-                Generated from %s
+            <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <img src="%s" style="height: 20px; width: auto;" alt="Eat Local First">
+                <span style="font-size: 8pt;">Generated from %s</span>
             </div>
         </div>',
-        esc_html($data['website'] ?: $data['url']),
+        plugin_dir_url(__FILE__) . 'eat-local-first-logo.png',
         esc_html($data['url']));
         
         $pdf->writeHTML($footer_html, true, false, true, false, '');
@@ -397,7 +397,7 @@ class SimpleListingPDFGenerator {
             // Only display category if it has filtered items
             if (!empty($filtered_items)) {
                 $items_text = implode(', ', $filtered_items);
-                $formatted_output[] = '<div style="font-weight: bold; margin-bottom: 2px;">' . $category . ':</div><div style="margin-bottom: 4px;">' . $items_text . '</div>';
+                $formatted_output[] = '<div style="font-weight: bold; margin-bottom: 1px;">' . $category . ':</div><div style="margin-bottom: 2px;">' . $items_text . '</div>';
             }
         }
 
@@ -479,7 +479,7 @@ class SimpleListingPDFGenerator {
             <div class="header-title" style="font-family: museosans900, helvetica, Arial, sans-serif; color: white; line-height: 1.2; margin-bottom: 4px; font-size: 24pt; font-weight: 900;">
                 %s
             </div>
-            <div class="header-subtitle" style="color: white; font-size: 11pt;">
+            <div class="header-subtitle" style="color: white; font-size: 11pt; font-weight: bold; margin-top: -8px;">
                 %s
             </div>
         </td>
@@ -577,10 +577,7 @@ esc_html($data['url'])             // %s - Footer URL
      * Build content section without image (image now positioned separately)
      */
     private function build_content_section($data, $about_content) {
-        return sprintf('
-        <div style="font-family: museosans500, helvetica, Arial, sans-serif; font-size: 10pt; line-height: 12pt; text-align: left; margin: 0; padding: 0;">
-            %s
-        </div>',
+        return sprintf('<div style="font-family: museosans500, helvetica, Arial, sans-serif; font-size: 10pt; line-height: 12pt; text-align: left; margin: 0; padding: 0;">%s</div>',
         $about_content);
     }
 
@@ -791,7 +788,10 @@ class CompleteListingPDFPlugin {
         add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
         add_action('wp_ajax_generate_listing_pdf', array($this, 'handle_pdf_generation'));
         add_action('wp_ajax_nopriv_generate_listing_pdf', array($this, 'handle_pdf_generation'));
-        add_action('wp_footer', array($this, 'add_pdf_button_via_javascript'));
+		// Add button via filter on listing page
+		add_filter('listing_footer_actions', array($this, 'add_pdf_button'));
+		// Add button javascript to footer
+        //add_action('wp_footer', array($this, 'add_pdf_button_javascript'));
     }
 
     /**
@@ -835,8 +835,8 @@ class CompleteListingPDFPlugin {
     /**
      * Add PDF button via JavaScript
      */
-    public function add_pdf_button_via_javascript() {
-        if (!is_singular() || !$this->is_listing_post_type() || !$this->user_can_generate_pdf()) {
+    public function add_pdf_button() {
+        if (!$this->user_can_generate_pdf()) {
             return;
         }
 
@@ -844,64 +844,41 @@ class CompleteListingPDFPlugin {
         $nonce = wp_create_nonce('generate_pdf_nonce');
         $ajax_url = admin_url('admin-ajax.php');
 
-        echo $this->get_pdf_button_styles();
-        ?>
-        <script type="text/javascript">
-        jQuery(document).ready(function($) {
-            var pdfButton = $('<div class="pdf-generator-wrapper"><button type="button" id="generate-pdf-btn" class="pdf-generator-btn" data-post-id="<?php echo esc_js($post_id); ?>">📄 Download PDF</button></div>');
+		$button = $this->get_pdf_button_styles();
+        $button .= '<div class="pdf-generator-wrapper"><button type="button" id="generate-pdf-btn" class="pdf-generator-btn" data-post-id="' . esc_js($post_id) . '">📄 Download PDF</button></div>';
+		$button .= '<script type="text/javascript">
+			jQuery(document).ready(function($) {
 
-            // Try to place button next to edit button first, then fallback locations
-            var inserted = false;
+				// Handle button click
+				$(document).on("click", "#generate-pdf-btn", function(e) {
+					e.preventDefault();
 
-            // Priority 1: Look for edit button locations
-            var editSelectors = [
-                '.admin-links-actions',
-            ];
+					var button = $(this);
+					var originalText = button.text();
 
-            for (var i = 0; i < editSelectors.length && !inserted; i++) {
-                var editElement = $(editSelectors[i]);
-                if (editElement.length > 0) {
-                    editElement.append(pdfButton);
-                    inserted = true;
-                    break;
-                }
-            }
+					button.prop("disabled", true).text("Generating...");
 
+					var form = $("<form>", {
+						method: "POST",
+						action: "' . $ajax_url . '",
+						target: "_blank"
+					});
 
-            if (!inserted) {
-                $('footer').first().before(pdfButton);
-            }
+					form.append($("<input>", { type: "hidden", name: "action", value: "generate_listing_pdf" }));
+					form.append($("<input>", { type: "hidden", name: "post_id", value: "' . $post_id . '" }));
+					form.append($("<input>", { type: "hidden", name: "nonce", value: "' . $nonce . '" }));
 
-            // Handle button click
-            $(document).on('click', '#generate-pdf-btn', function(e) {
-                e.preventDefault();
+					$("body").append(form);
+					form.submit();
+					form.remove();
 
-                var button = $(this);
-                var originalText = button.text();
-
-                button.prop('disabled', true).text('Generating...');
-
-                var form = $('<form>', {
-                    method: 'POST',
-                    action: '<?php echo $ajax_url; ?>',
-                    target: '_blank'
-                });
-
-                form.append($('<input>', { type: 'hidden', name: 'action', value: 'generate_listing_pdf' }));
-                form.append($('<input>', { type: 'hidden', name: 'post_id', value: '<?php echo $post_id; ?>' }));
-                form.append($('<input>', { type: 'hidden', name: 'nonce', value: '<?php echo $nonce; ?>' }));
-
-                $('body').append(form);
-                form.submit();
-                form.remove();
-
-                setTimeout(function() {
-                    button.prop('disabled', false).text(originalText);
-                }, 2000);
-            });
-        });
-        </script>
-        <?php
+					setTimeout(function() {
+						button.prop("disabled", false).text(originalText);
+					}, 2000);
+				});
+			});
+        </script>';
+		return $button;
     }
 
     /**
